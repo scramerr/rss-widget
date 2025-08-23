@@ -7,9 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import android.util.Log
-import androidx.core.graphics.ColorUtils
 import androidx.core.net.toUri
-import com.byterdevs.rsswidget.ThemeUtils.getThemedContextForWidget
 import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
 
 class RssWidgetProvider : AppWidgetProvider() {

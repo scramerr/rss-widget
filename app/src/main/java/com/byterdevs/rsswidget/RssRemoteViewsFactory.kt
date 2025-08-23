@@ -24,9 +24,6 @@ import org.ocpsoft.prettytime.PrettyTime
 import java.net.HttpURLConnection
 import java.net.URL
 import android.text.format.DateFormat
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 
