@@ -4,6 +4,8 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Parcelable
 import android.util.Log
 import android.util.TypedValue
@@ -79,15 +81,36 @@ class RssRemoteViewsFactory(private val context: Context, private val rssUrl: St
             isRefreshing = true
         }
 
-        items.clear()
+        // Check network availability
+        fun isNetworkAvailable(): Boolean {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        }
+
         error = false
 
         if(rssUrl == null) {
             error = true
-            items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", "", ""))
+            if (items.isEmpty()) {
+                items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", "", ""))
+            }
             isRefreshing = false
             return
         }
+
+        if (!isNetworkAvailable()) {
+            error = true
+            Log.e("RssRemoteViewsFactory", "Network unavailable, not clearing items.")
+            if (items.isEmpty()) {
+                items.add(RssItem("No internet connection", "Connect to the internet and refresh.", "", ""))
+            }
+            isRefreshing = false
+            return
+        }
+
+        items.clear()
 
         try {
             val url = rssUrl
