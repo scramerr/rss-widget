@@ -14,10 +14,14 @@ class RssRemoteViewsService : RemoteViewsService() {
         val showDescription = intent.getBooleanExtra("EXTRA_SHOW_DESCRIPTION", false)
         val descriptionLength = intent.getIntExtra("EXTRA_DESCRIPTION_LENGTH", -1)
         val transparency = intent.getFloatExtra("EXTRA_TRANSPARENCY", 100f)
+        val showSource = intent.getBooleanExtra("EXTRA_SHOW_SOURCE", false)
+        val dateFormat = intent.getStringExtra("EXTRA_DATE_FORMAT") ?: "relative"
         val factory = RssRemoteViewsFactory(context, url, maxItems, showDescription, transparency)
         factory.setHeader(customTitle)
         factory.setDescriptionLength(descriptionLength)
         factory.setAppWidgetId(appWidgetId)
+        factory.setShowSource(showSource)
+        factory.setDateFormat(dateFormat)
         return factory
     }
 }

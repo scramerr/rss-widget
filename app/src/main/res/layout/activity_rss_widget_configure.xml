@@ -84,6 +84,38 @@
         app:labelBehavior="gone"
         android:visibility="gone"/>
 
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_source"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show article source?"/>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date format"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"/>
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toggle_button_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:singleSelection="true">
+        <com.google.android.material.button.MaterialButton
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relative"/>
+        <com.google.android.material.button.MaterialButton
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Absolute"/>
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/label_max_items"
         android:layout_width="wrap_content"

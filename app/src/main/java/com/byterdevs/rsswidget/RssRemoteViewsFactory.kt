@@ -23,6 +23,11 @@ import kotlinx.parcelize.Parcelize
 import org.ocpsoft.prettytime.PrettyTime
 import java.net.HttpURLConnection
 import java.net.URL
+import android.text.format.DateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 
 @ColorInt
@@ -47,6 +52,8 @@ class RssRemoteViewsFactory(
     private var showTitle: Boolean = false
     private var appWidgetId: Int = -1
     private var error: Boolean = false
+    private var showSource: Boolean = false
+    private var dateFormat: String = "relative"
 
     companion object {
         private val refreshLock = Any()
@@ -54,6 +61,35 @@ class RssRemoteViewsFactory(
     }
     override fun onCreate() {
 
+    }
+
+    fun setShowSource(show: Boolean) { showSource = show }
+    fun setDateFormat(format: String) { dateFormat = format }
+
+    fun getSourceFromUrl(url: String): String {
+        return try {
+            val host = URL(url).host
+            if (host.startsWith("www.")) host.substring(4) else host
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    fun formatAsTodayOrFullDate(date: java.util.Date): String {
+        return if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) == date.date) {
+            "Today, " + DateFormat.format("h:mm a", date).toString()
+        } else {
+            DateFormat.format("MMM d, yyyy h:mm a", date).toString()
+        }
+    }
+
+    fun formatDate(date: java.util.Date?): String {
+        if (date == null) return ""
+        return if (dateFormat == "absolute") {
+            formatAsTodayOrFullDate(date)
+        } else {
+            PrettyTime().format(date)
+        }
     }
 
     fun loadRSS(url: String): List<RssItem> {
@@ -71,16 +107,14 @@ class RssRemoteViewsFactory(
             val title = entry.title ?: "No Title"
             val link = entry.link ?: ""
             val rawDescription = entry.description?.value ?: ""
-            // Parse HTML to plain text and truncate to 100 chars with ellipses
             val plainDescription = HtmlCompat.fromHtml(rawDescription, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().replace("\n", " ").trim()
             val description = if (trimDescription && plainDescription.length > descriptionTrimLength)
                 plainDescription.take(descriptionTrimLength) + "..."
                 else plainDescription
 
-            val pubDate = entry.publishedDate?.let {
-                PrettyTime().format(it)
-            } ?: ""
-            items.add(RssItem(title, description, link, pubDate))
+            val pubDate = formatDate(entry.publishedDate)
+            val source = if (showSource) getSourceFromUrl(link) else ""
+            items.add(RssItem(title, description, link, pubDate, source))
         }
         return items
     }
@@ -183,6 +217,12 @@ class RssRemoteViewsFactory(
             views.setViewVisibility(R.id.item_description, android.view.View.GONE)
         }
         views.setTextViewText(R.id.item_date, item.pubDate)
+        if (showSource && item.source.isNotEmpty()) {
+            views.setViewVisibility(R.id.item_source, android.view.View.VISIBLE)
+            views.setTextViewText(R.id.item_source, item.source)
+        } else {
+            views.setViewVisibility(R.id.item_source, android.view.View.GONE)
+        }
         markItemRead(views, item)
 
         val fillInIntent = Intent()
@@ -224,5 +264,11 @@ class RssRemoteViewsFactory(
     override fun onDestroy() { items.clear() }
 
     @Parcelize
-    data class RssItem(val title: String, val description: String, val link: String, val pubDate: String): Parcelable
+    data class RssItem(
+        val title: String,
+        val description: String,
+        val link: String,
+        val pubDate: String,
+        val source: String = ""
+    ): Parcelable
 }

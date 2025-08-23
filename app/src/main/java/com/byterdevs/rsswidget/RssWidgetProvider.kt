@@ -45,6 +45,8 @@ class RssWidgetProvider : AppWidgetProvider() {
             val showDescription = RssWidgetConfigureActivity.loadDescriptionPref(context, appWidgetId)
             val descriptionLen = RssWidgetConfigureActivity.loadDescriptionLenPref(context, appWidgetId)
             val transparency = RssWidgetConfigureActivity.loadTransparencyPref(context, appWidgetId)
+            val showSource = RssWidgetConfigureActivity.loadShowSourcePref(context, appWidgetId)
+            val dateFormat = RssWidgetConfigureActivity.loadDateFormatPref(context, appWidgetId)
 
             val views = setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss), R.id.widget_rss, transparency)
 
@@ -54,8 +56,10 @@ class RssWidgetProvider : AppWidgetProvider() {
             intent.putExtra("EXTRA_MAX_ITEMS", maxItems)
             intent.putExtra("EXTRA_SHOW_DESCRIPTION", showDescription)
             intent.putExtra("EXTRA_DESCRIPTION_LENGTH", descriptionLen)
-            intent.putExtra("EXTRA_TITLE", customTitle) // Pass customTitle as an extra
-            intent.putExtra("EXTRA_TRANSPARENCY", transparency) // Pass transparency as an extra
+            intent.putExtra("EXTRA_TITLE", customTitle)
+            intent.putExtra("EXTRA_TRANSPARENCY", transparency)
+            intent.putExtra("EXTRA_SHOW_SOURCE", showSource)
+            intent.putExtra("EXTRA_DATE_FORMAT", dateFormat)
             intent.data = intent.toUri(Intent.URI_INTENT_SCHEME).toUri()
             views.setRemoteAdapter(R.id.widget_list, intent)
             views.setEmptyView(R.id.widget_list, R.id.empty_text)

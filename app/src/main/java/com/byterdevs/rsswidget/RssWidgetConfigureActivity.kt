@@ -33,6 +33,8 @@ class RssWidgetConfigureActivity : Activity() {
     private val transparencySlider: Slider get() = findViewById(R.id.slider_transparency)
     private val labelTransparency: MaterialTextView get() = findViewById(R.id.label_transparency)
     private val sampleButtonsContainer: LinearLayout get() = findViewById(R.id.sample_buttons_container)
+    private val switchSource: SwitchMaterial get() = findViewById(R.id.switch_source)
+    private val toggleButtonGroup: com.google.android.material.button.MaterialButtonToggleGroup get() = findViewById(R.id.toggle_button_group)
 
     private val urlSamples = listOf(
         Pair("Reddit", "https://www.reddit.com/r/news/.rss"),
@@ -108,6 +110,8 @@ class RssWidgetConfigureActivity : Activity() {
             val customTitle = if (switchTitle.isChecked) titleEdit.text?.toString()?.trim() else null
             if (url.isNotEmpty()) {
                 val showDescription  = switchDescription.isChecked
+                val showSource = switchSource.isChecked
+                val dateFormat = if (toggleButtonGroup.checkedButtonId == toggleButtonGroup.getChildAt(0).id) "relative" else "absolute"
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit {
                     putString(PREF_PREFIX_KEY + appWidgetId, url)
@@ -116,6 +120,8 @@ class RssWidgetConfigureActivity : Activity() {
                     .putInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, descriptionLength)
                     .putBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, showDescription)
                     .putFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, transparency)
+                    .putBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, showSource)
+                    .putString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, dateFormat)
                 }
 
                 val context = this@RssWidgetConfigureActivity
@@ -143,6 +149,8 @@ class RssWidgetConfigureActivity : Activity() {
         val savedShowDescription = prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
         val savedDescriptionLength = prefs.getInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, -1)
         val savedTransparency = prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)
+        val savedShowSource = prefs.getBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, false)
+        val savedDateFormat = prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative")
 
         if (!savedUrl.isNullOrEmpty()) {
             urlInput.setText(savedUrl)
@@ -164,6 +172,11 @@ class RssWidgetConfigureActivity : Activity() {
         }
         transparencySlider.value = savedTransparency
         labelTransparency.text = "Widget background opacity: ${savedTransparency.toInt()}%"
+        switchSource.isChecked = savedShowSource
+        // Set toggle button selection
+        val relativeBtnId = toggleButtonGroup.getChildAt(0).id
+        val absoluteBtnId = toggleButtonGroup.getChildAt(1).id
+        toggleButtonGroup.check(if (savedDateFormat == "absolute") absoluteBtnId else relativeBtnId)
     }
 
     companion object {
@@ -194,6 +207,15 @@ class RssWidgetConfigureActivity : Activity() {
         fun loadTransparencyPref(context: Context, appWidgetId: Int): Float {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)
+        }
+
+        fun loadShowSourcePref(context: Context, appWidgetId: Int): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, false)
+        }
+        fun loadDateFormatPref(context: Context, appWidgetId: Int): String {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative") ?: "relative"
         }
     }
 }
