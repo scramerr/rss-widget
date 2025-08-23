@@ -3,26 +3,27 @@ package com.byterdevs.rsswidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Parcelable
 import android.util.Log
 import android.util.TypedValue
-import android.view.ContextThemeWrapper
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
+import com.byterdevs.rsswidget.ThemeUtils.getThemedContextForWidget
+import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
 import com.rometools.rome.io.SyndFeedInput
 import com.rometools.rome.io.XmlReader
 import kotlinx.parcelize.Parcelize
+import org.ocpsoft.prettytime.PrettyTime
 import java.net.HttpURLConnection
 import java.net.URL
-import androidx.core.net.toUri
-import org.ocpsoft.prettytime.PrettyTime
+
 
 @ColorInt
 fun Context.getColorResCompat(@AttrRes id: Int): Int {
@@ -32,7 +33,13 @@ fun Context.getColorResCompat(@AttrRes id: Int): Int {
     return ContextCompat.getColor(this, colorRes)
 }
 
-class RssRemoteViewsFactory(private val context: Context, private val rssUrl: String?, private val maxItems: Int = 20, private val showDescription: Boolean = false) : RemoteViewsService.RemoteViewsFactory {
+class RssRemoteViewsFactory(
+    private val context: Context,
+    private val rssUrl: String?,
+    private val maxItems: Int = 20,
+    private val showDescription: Boolean = false,
+    private val transparency: Float = 100f
+) : RemoteViewsService.RemoteViewsFactory {
     private var items = mutableListOf<RssItem>()
     private var customTitle: String? = null
     private var showTitle: Boolean = false
@@ -44,6 +51,7 @@ class RssRemoteViewsFactory(private val context: Context, private val rssUrl: St
         @Volatile private var isRefreshing = false
     }
     override fun onCreate() {
+
     }
 
     fun loadRSS(url: String): List<RssItem> {
@@ -150,7 +158,7 @@ class RssRemoteViewsFactory(private val context: Context, private val rssUrl: St
         }
         val itemIndex = if (showTitle) position - 1 else position
         if (itemIndex >= items.size) {
-            return getLoadingView();
+            return getLoadingView()
         }
         val item = items[itemIndex]
         val views = RemoteViews(context.packageName, R.layout.widget_rss_item)
@@ -195,24 +203,12 @@ class RssRemoteViewsFactory(private val context: Context, private val rssUrl: St
     }
 
     override fun getLoadingView(): RemoteViews {
-        return RemoteViews(context.packageName, R.layout.widget_rss_loading)
+        return setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss_loading), R.id.widget_rss_loading, transparency)
     }
+
     override fun getItemId(position: Int): Long = position.toLong()
     override fun hasStableIds(): Boolean = true
     override fun onDestroy() { items.clear() }
-
-    fun getThemedContextForWidget(context: Context): Context {
-        val nightModeFlags = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-        val isNightMode = nightModeFlags == Configuration.UI_MODE_NIGHT_YES
-        val newConfig = Configuration(context.resources.configuration)
-        newConfig.uiMode = if (isNightMode) {
-            Configuration.UI_MODE_NIGHT_YES
-        } else {
-            Configuration.UI_MODE_NIGHT_NO
-        }
-        val configurationContext = context.applicationContext.createConfigurationContext(newConfig)
-        return ContextThemeWrapper(configurationContext, com.google.android.material.R.style.Theme_Material3_DynamicColors_DayNight)
-    }
 
     @Parcelize
     data class RssItem(val title: String, val description: String, val link: String, val pubDate: String): Parcelable

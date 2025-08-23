@@ -1,0 +1,21 @@
+package com.byterdevs.rsswidget
+
+import android.appwidget.AppWidgetManager
+import android.content.Intent
+import android.widget.RemoteViewsService
+
+class RssRemoteViewsService : RemoteViewsService() {
+    override fun onGetViewFactory(intent: Intent): RemoteViewsFactory {
+        val context = applicationContext
+        val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        val url = intent.getStringExtra("EXTRA_URL")
+        val customTitle = intent.getStringExtra("EXTRA_TITLE")
+        val maxItems = intent.getIntExtra("EXTRA_MAX_ITEMS", 20)
+        val showDescription = intent.getBooleanExtra("EXTRA_SHOW_DESCRIPTION", false)
+        val transparency = intent.getFloatExtra("EXTRA_TRANSPARENCY", 100f)
+        val factory = RssRemoteViewsFactory(context, url, maxItems, showDescription, transparency)
+        factory.setHeader(customTitle)
+        factory.setAppWidgetId(appWidgetId)
+        return factory
+    }
+}

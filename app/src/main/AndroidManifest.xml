@@ -11,7 +11,7 @@
         android:label="@string/app_label"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Material3.DynamicColors.DayNight">
+        android:theme="@style/Theme.RSSWidget">
         <receiver android:name=".RssWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -22,16 +22,14 @@
                 android:updatePeriodMillis="1800000"/>
         </receiver>
         <service
-            android:name=".RssWidgetService"
+            android:name=".RssRemoteViewsService"
             android:permission="android.permission.BIND_REMOTEVIEWS"/>
         <activity
             android:name=".BrowserLauncherActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="true" />
         <activity
             android:name=".RssWidgetConfigureActivity"
             android:exported="true"
-            android:theme="@style/Theme.RSSWidget"
         />
     </application>
 

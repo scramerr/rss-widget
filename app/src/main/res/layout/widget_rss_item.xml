@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
-    android:background="@drawable/material_card"
     android:orientation="vertical"
     android:padding="4dp"
     android:theme="@style/Theme.Material3.DynamicColors.DayNight">
