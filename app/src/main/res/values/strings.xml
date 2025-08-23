@@ -3,7 +3,7 @@
     <string name="app_label">HomeFeed</string>
     <string name="refresh">Refresh</string>
     <string name="description">Show Description?</string>
-    <string name="rss_feed">RSS Feed</string>
+    <string name="rss_feed">Header</string>
     <string name="header">Custom Header</string>
     <string name="done">Done</string>
     <string name="rss_feed_url">RSS Feed URL</string>
