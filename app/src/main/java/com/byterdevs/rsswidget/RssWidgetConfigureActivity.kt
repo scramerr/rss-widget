@@ -62,8 +62,17 @@ class RssWidgetConfigureActivity : Activity() {
             sampleButtonsContainer.addView(btn)
         }
 
-        var maxItems = 20
-        slider.value = 20f
+        restoreConfig(
+            urlInput,
+            switchTitle,
+            titleInputLayout,
+            titleEdit,
+            slider,
+            labelMaxItems,
+            switchDescription
+        )
+
+        var maxItems = slider.value.toInt()
         slider.addOnChangeListener { _, value, _ ->
             maxItems = value.toInt()
             labelMaxItems.text = "Max items to display: $maxItems"
@@ -78,7 +87,6 @@ class RssWidgetConfigureActivity : Activity() {
             val customTitle = if (switchTitle.isChecked) titleEdit.text?.toString()?.trim() else null
             if (url.isNotEmpty()) {
                 val showDescription  = switchDescription.isChecked
-                // Save the URL, title, and maxItems in SharedPreferences
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit {
                     putString(PREF_PREFIX_KEY + appWidgetId, url)
@@ -90,12 +98,10 @@ class RssWidgetConfigureActivity : Activity() {
                         )
                 }
 
-                // Update the widget
                 val context = this@RssWidgetConfigureActivity
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 RssWidgetProvider.updateAppWidget(context, appWidgetManager, appWidgetId, url, customTitle, maxItems, showDescription)
 
-                // Return result
                 val resultValue = Intent().apply {
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 }
@@ -105,6 +111,34 @@ class RssWidgetConfigureActivity : Activity() {
                 urlInput.error = "Please enter a valid RSS feed URL"
             }
         }
+    }
+
+    private fun restoreConfig(
+        urlInput: TextInputEditText,
+        switchTitle: SwitchMaterial,
+        titleInputLayout: TextInputLayout,
+        titleEdit: TextInputEditText,
+        slider: Slider,
+        labelMaxItems: MaterialTextView,
+        switchDescription: SwitchMaterial
+    ) {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedUrl = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
+        val savedTitle = prefs.getString(PREF_PREFIX_KEY + "title_" + appWidgetId, null)
+        val savedMaxItems = prefs.getInt(PREF_PREFIX_KEY + "max_" + appWidgetId, 20)
+        val savedShowDescription = prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
+
+        if (!savedUrl.isNullOrEmpty()) {
+            urlInput.setText(savedUrl)
+        }
+        switchTitle.isChecked = !savedTitle.isNullOrEmpty()
+        titleInputLayout.visibility = if (switchTitle.isChecked) android.view.View.VISIBLE else android.view.View.GONE
+        if (!savedTitle.isNullOrEmpty()) {
+            titleEdit.setText(savedTitle)
+        }
+        slider.value = savedMaxItems.toFloat()
+        labelMaxItems.text = "Max items to display: $savedMaxItems"
+        switchDescription.isChecked = savedShowDescription
     }
 
     companion object {
