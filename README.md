@@ -22,13 +22,13 @@
 - Customizable widget header/title
 - Show/hide article descriptions
 - Set maximum number of items to display
-- Material You theme support
+- Material You dynamic colors with configurable transparency
 
 ## Screenshots
 
-|                        |                        |
-|------------------------|------------------------|
-| ![](assets/config.jpg) | ![](assets/widget.jpg) |
+|                        |                        |                        |
+|------------------------|------------------------|------------------------|
+| ![](assets/config.png) | ![](assets/dark.png)   | ![](assets/light.png)  |
 
 ## Getting Started
 
