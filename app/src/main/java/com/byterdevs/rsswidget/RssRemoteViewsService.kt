@@ -12,9 +12,11 @@ class RssRemoteViewsService : RemoteViewsService() {
         val customTitle = intent.getStringExtra("EXTRA_TITLE")
         val maxItems = intent.getIntExtra("EXTRA_MAX_ITEMS", 20)
         val showDescription = intent.getBooleanExtra("EXTRA_SHOW_DESCRIPTION", false)
+        val descriptionLength = intent.getIntExtra("EXTRA_DESCRIPTION_LENGTH", -1)
         val transparency = intent.getFloatExtra("EXTRA_TRANSPARENCY", 100f)
         val factory = RssRemoteViewsFactory(context, url, maxItems, showDescription, transparency)
         factory.setHeader(customTitle)
+        factory.setDescriptionLength(descriptionLength)
         factory.setAppWidgetId(appWidgetId)
         return factory
     }

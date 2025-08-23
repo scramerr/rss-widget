@@ -18,6 +18,29 @@ import androidx.core.content.edit
 
 class RssWidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+    private val urlInput: TextInputEditText get() = findViewById(R.id.edit_rss_url)
+    private val addButton: MaterialButton get() = findViewById(R.id.button_add)
+    private val switchTitle: SwitchMaterial get() = findViewById(R.id.switch_title)
+    private val titleInputLayout: TextInputLayout get() = findViewById(R.id.title_input_layout)
+    private val titleEdit: TextInputEditText get() = findViewById(R.id.edit_widget_title)
+
+    private val slider: Slider get() = findViewById(R.id.slider_max_items)
+    private val labelMaxItems: MaterialTextView get() = findViewById(R.id.label_max_items)
+
+    private val switchDescription: SwitchMaterial get() = findViewById(R.id.switch_description)
+    private val switchTrimDescription: SwitchMaterial get() = findViewById(R.id.switch_trim_description)
+    private val sliderTrimDescription: Slider get() = findViewById(R.id.slider_trim_description)
+    private val transparencySlider: Slider get() = findViewById(R.id.slider_transparency)
+    private val labelTransparency: MaterialTextView get() = findViewById(R.id.label_transparency)
+    private val sampleButtonsContainer: LinearLayout get() = findViewById(R.id.sample_buttons_container)
+
+    private val urlSamples = listOf(
+        Pair("Reddit", "https://www.reddit.com/r/news/.rss"),
+        Pair("Hacker News", "https://hnrss.org/frontpage?link=comments"),
+        Pair("BBC", "https://feeds.bbci.co.uk/news/rss.xml"),
+        Pair("NY Times", "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"),
+        Pair("Guardian", "https://www.theguardian.com/world/rss"),
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,28 +55,9 @@ class RssWidgetConfigureActivity : Activity() {
             return
         }
 
-        val urlInput = findViewById<TextInputEditText>(R.id.edit_rss_url)
-        val addButton = findViewById<MaterialButton>(R.id.button_add)
-        val switchTitle = findViewById<SwitchMaterial>(R.id.switch_title)
-        val switchDescription = findViewById<SwitchMaterial>(R.id.switch_description)
-        val titleInputLayout = findViewById<TextInputLayout>(R.id.title_input_layout)
-        val titleEdit = findViewById<TextInputEditText>(R.id.edit_widget_title)
-        val slider = findViewById<Slider>(R.id.slider_max_items)
-        val labelMaxItems = findViewById<MaterialTextView>(R.id.label_max_items)
-        val transparencySlider = findViewById<Slider>(R.id.slider_transparency)
-        val labelTransparency = findViewById<MaterialTextView>(R.id.label_transparency)
-
-        val sampleButtonsContainer = findViewById<LinearLayout>(R.id.sample_buttons_container)
         val inflater = LayoutInflater.from(this)
-        val samples = listOf(
-            Pair("Reddit", "https://www.reddit.com/r/news/.rss"),
-            Pair("Hacker News", "https://hnrss.org/frontpage?link=comments"),
-            Pair("BBC", "https://feeds.bbci.co.uk/news/rss.xml"),
-            Pair("NY Times", "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"),
-            Pair("Guardian", "https://www.theguardian.com/world/rss"),
-        )
 
-        samples.forEach { (label, url) ->
+        urlSamples.forEach { (label, url) ->
             val btn = inflater.inflate(R.layout.item_sample_rss_button, sampleButtonsContainer, false) as MaterialButton
             btn.text = label
             btn.setOnClickListener { urlInput.setText(url) }
@@ -64,18 +68,7 @@ class RssWidgetConfigureActivity : Activity() {
             sampleButtonsContainer.addView(btn)
         }
 
-        restoreConfig(
-            urlInput,
-            switchTitle,
-            titleInputLayout,
-            titleEdit,
-            slider,
-            labelMaxItems,
-            switchDescription,
-            transparencySlider,
-            labelTransparency
-        )
-
+        restoreConfig()
         var maxItems = slider.value.toInt()
         var transparency = transparencySlider.value
         slider.addOnChangeListener { _, value, _ ->
@@ -84,11 +77,30 @@ class RssWidgetConfigureActivity : Activity() {
         }
         transparencySlider.addOnChangeListener { _, value, _ ->
             transparency = value
-            labelTransparency.text = "Widget opacity: ${value.toInt()}%"
+            labelTransparency.text = "Widget background opacity: ${value.toInt()}%"
         }
 
         switchTitle.setOnCheckedChangeListener { _, isChecked ->
             titleInputLayout.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+        }
+
+        switchDescription.setOnCheckedChangeListener { _, isChecked ->
+            switchTrimDescription.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+        }
+
+        var descriptionLength = if (switchTrimDescription.isChecked) sliderTrimDescription.value.toInt() else -1
+        switchTrimDescription.setOnCheckedChangeListener { _, isChecked ->
+            sliderTrimDescription.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            if (!isChecked) {
+                descriptionLength = -1
+                switchTrimDescription.text  = "Trim description?"
+            } else {
+                switchTrimDescription.text  = "Trim description: ${sliderTrimDescription.value.toInt()} chars"
+            }
+        }
+        sliderTrimDescription.addOnChangeListener { _, value, _ ->
+            switchTrimDescription.text  = "Trim description: ${value.toInt()} chars"
+            descriptionLength = value.toInt()
         }
 
         addButton.setOnClickListener {
@@ -99,16 +111,17 @@ class RssWidgetConfigureActivity : Activity() {
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit {
                     putString(PREF_PREFIX_KEY + appWidgetId, url)
-                        .putString(PREF_PREFIX_KEY + "title_" + appWidgetId, customTitle)
-                        .putInt(PREF_PREFIX_KEY + "max_" + appWidgetId, maxItems)
-                        .putBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, showDescription)
-                        .putFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, transparency)
+                    .putString(PREF_PREFIX_KEY + "title_" + appWidgetId, customTitle)
+                    .putInt(PREF_PREFIX_KEY + "max_" + appWidgetId, maxItems)
+                    .putInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, descriptionLength)
+                    .putBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, showDescription)
+                    .putFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, transparency)
                 }
 
                 val context = this@RssWidgetConfigureActivity
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 RssWidgetProvider.updateAppWidget(
-                    context, appWidgetManager, appWidgetId, url, customTitle, maxItems, showDescription, transparency
+                    context, appWidgetManager, appWidgetId
                 )
 
                 val resultValue = Intent().apply {
@@ -122,22 +135,13 @@ class RssWidgetConfigureActivity : Activity() {
         }
     }
 
-    private fun restoreConfig(
-        urlInput: TextInputEditText,
-        switchTitle: SwitchMaterial,
-        titleInputLayout: TextInputLayout,
-        titleEdit: TextInputEditText,
-        slider: Slider,
-        labelMaxItems: MaterialTextView,
-        switchDescription: SwitchMaterial,
-        transparencySlider: Slider,
-        labelTransparency: MaterialTextView
-    ) {
+    private fun restoreConfig() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val savedUrl = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
         val savedTitle = prefs.getString(PREF_PREFIX_KEY + "title_" + appWidgetId, null)
         val savedMaxItems = prefs.getInt(PREF_PREFIX_KEY + "max_" + appWidgetId, 20)
         val savedShowDescription = prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
+        val savedDescriptionLength = prefs.getInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, -1)
         val savedTransparency = prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)
 
         if (!savedUrl.isNullOrEmpty()) {
@@ -151,8 +155,15 @@ class RssWidgetConfigureActivity : Activity() {
         slider.value = savedMaxItems.toFloat()
         labelMaxItems.text = "Max items to display: $savedMaxItems"
         switchDescription.isChecked = savedShowDescription
+        if (savedDescriptionLength > 0) {
+            switchTrimDescription.isChecked = true
+            switchTrimDescription.visibility = android.view.View.VISIBLE
+            sliderTrimDescription.visibility = android.view.View.VISIBLE
+            sliderTrimDescription.value = savedDescriptionLength.toFloat()
+            switchTrimDescription.text = "Trim description: ${sliderTrimDescription.value.toInt()} chars"
+        }
         transparencySlider.value = savedTransparency
-        labelTransparency.text = "Widget transparency: ${savedTransparency.toInt()}%"
+        labelTransparency.text = "Widget background opacity: ${savedTransparency.toInt()}%"
     }
 
     companion object {
@@ -174,6 +185,12 @@ class RssWidgetConfigureActivity : Activity() {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
         }
+
+        fun loadDescriptionLenPref(context: Context, appWidgetId: Int): Int {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, -1)
+        }
+
         fun loadTransparencyPref(context: Context, appWidgetId: Int): Float {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)

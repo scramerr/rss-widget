@@ -15,12 +15,7 @@ import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
 class RssWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
-            val url = RssWidgetConfigureActivity.loadRssUrlPref(context, appWidgetId)
-            val customTitle = RssWidgetConfigureActivity.loadTitlePref(context, appWidgetId)
-            val maxItems = RssWidgetConfigureActivity.loadMaxItemsPref(context, appWidgetId)
-            val showDescription = RssWidgetConfigureActivity.loadDescriptionPref(context, appWidgetId)
-            val transparency = RssWidgetConfigureActivity.loadTransparencyPref(context, appWidgetId)
-            updateAppWidget(context, appWidgetManager, appWidgetId, url, customTitle, maxItems, showDescription, transparency)
+            updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
@@ -43,7 +38,14 @@ class RssWidgetProvider : AppWidgetProvider() {
 
     companion object {
         // Add this function to update the widget with the selected URL
-        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, url: String?, customTitle: String? = null, maxItems: Int = 20, showDescription: Boolean = false, transparency: Float = 100f) {
+        fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
+            val url = RssWidgetConfigureActivity.loadRssUrlPref(context, appWidgetId)
+            val customTitle = RssWidgetConfigureActivity.loadTitlePref(context, appWidgetId)
+            val maxItems = RssWidgetConfigureActivity.loadMaxItemsPref(context, appWidgetId)
+            val showDescription = RssWidgetConfigureActivity.loadDescriptionPref(context, appWidgetId)
+            val descriptionLen = RssWidgetConfigureActivity.loadDescriptionLenPref(context, appWidgetId)
+            val transparency = RssWidgetConfigureActivity.loadTransparencyPref(context, appWidgetId)
+
             val views = setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss), R.id.widget_rss, transparency)
 
             val intent = Intent(context, RssRemoteViewsService::class.java)
@@ -51,6 +53,7 @@ class RssWidgetProvider : AppWidgetProvider() {
             intent.putExtra("EXTRA_URL", url)
             intent.putExtra("EXTRA_MAX_ITEMS", maxItems)
             intent.putExtra("EXTRA_SHOW_DESCRIPTION", showDescription)
+            intent.putExtra("EXTRA_DESCRIPTION_LENGTH", descriptionLen)
             intent.putExtra("EXTRA_TITLE", customTitle) // Pass customTitle as an extra
             intent.putExtra("EXTRA_TRANSPARENCY", transparency) // Pass transparency as an extra
             intent.data = intent.toUri(Intent.URI_INTENT_SCHEME).toUri()

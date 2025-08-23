@@ -42,6 +42,8 @@ class RssRemoteViewsFactory(
 ) : RemoteViewsService.RemoteViewsFactory {
     private var items = mutableListOf<RssItem>()
     private var customTitle: String? = null
+    private var trimDescription: Boolean = false
+    private var descriptionTrimLength: Int = 100
     private var showTitle: Boolean = false
     private var appWidgetId: Int = -1
     private var error: Boolean = false
@@ -71,11 +73,14 @@ class RssRemoteViewsFactory(
             val rawDescription = entry.description?.value ?: ""
             // Parse HTML to plain text and truncate to 100 chars with ellipses
             val plainDescription = HtmlCompat.fromHtml(rawDescription, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().replace("\n", " ").trim()
-            val truncatedDescription = if (plainDescription.length > 100) plainDescription.take(500) + "..." else plainDescription
+            val description = if (trimDescription && plainDescription.length > descriptionTrimLength)
+                plainDescription.take(descriptionTrimLength) + "..."
+                else plainDescription
+
             val pubDate = entry.publishedDate?.let {
                 PrettyTime().format(it)
             } ?: ""
-            items.add(RssItem(title, truncatedDescription, link, pubDate))
+            items.add(RssItem(title, description, link, pubDate))
         }
         return items
     }
@@ -139,6 +144,14 @@ class RssRemoteViewsFactory(
         customTitle = title
         showTitle = !title.isNullOrEmpty()
     }
+
+    fun setDescriptionLength(length: Int) {
+        if (length > 0) {
+            trimDescription = true
+            descriptionTrimLength = length
+        }
+    }
+
     fun setAppWidgetId(id: Int) { appWidgetId = id }
 
     override fun getCount(): Int {
@@ -158,7 +171,7 @@ class RssRemoteViewsFactory(
         }
         val itemIndex = if (showTitle) position - 1 else position
         if (itemIndex >= items.size) {
-            return getLoadingView()
+            return loadingView
         }
         val item = items[itemIndex]
         val views = RemoteViews(context.packageName, R.layout.widget_rss_item)
