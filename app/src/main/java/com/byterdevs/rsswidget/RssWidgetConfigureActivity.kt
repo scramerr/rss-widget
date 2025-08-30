@@ -32,7 +32,11 @@ class RssWidgetConfigureActivity : Activity() {
     private val labelTransparency: MaterialTextView get() = findViewById(R.id.label_transparency)
     private val sampleButtonsContainer: LinearLayout get() = findViewById(R.id.sample_buttons_container)
     private val switchSource: MaterialSwitch get() = findViewById(R.id.switch_source)
-    private val toggleButtonGroup: com.google.android.material.button.MaterialButtonToggleGroup get() = findViewById(R.id.toggle_button_group)
+    private val toggleButtonGroup: com.google.android.material.button.MaterialButtonToggleGroup
+        get() = findViewById(
+            R.id.toggle_button_group
+        )
+    private val updateIntervalSpinner: android.widget.Spinner get() = findViewById(R.id.spinner_update_interval)
 
     private val urlSamples = listOf(
         Pair("Reddit", "https://www.reddit.com/r/news/.rss"),
@@ -41,6 +45,8 @@ class RssWidgetConfigureActivity : Activity() {
         Pair("NY Times", "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"),
         Pair("Guardian", "https://www.theguardian.com/world/rss"),
     )
+    private val intervalValues = listOf(0, 15, 30, 60, 180, 360, 720) // minutes, 0 = manual
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +54,10 @@ class RssWidgetConfigureActivity : Activity() {
         setContentView(R.layout.activity_rss_widget_configure)
 
         // Find the widget id from the intent.
-        appWidgetId = intent?.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        appWidgetId = intent?.getIntExtra(
+            AppWidgetManager.EXTRA_APPWIDGET_ID,
+            AppWidgetManager.INVALID_APPWIDGET_ID
+        )
             ?: AppWidgetManager.INVALID_APPWIDGET_ID
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
@@ -58,7 +67,11 @@ class RssWidgetConfigureActivity : Activity() {
         val inflater = LayoutInflater.from(this)
 
         urlSamples.forEach { (label, url) ->
-            val btn = inflater.inflate(R.layout.item_sample_rss_button, sampleButtonsContainer, false) as MaterialButton
+            val btn = inflater.inflate(
+                R.layout.item_sample_rss_button,
+                sampleButtonsContainer,
+                false
+            ) as MaterialButton
             btn.text = label
             btn.setOnClickListener { urlInput.setText(url) }
             btn.setLines(2)
@@ -68,7 +81,6 @@ class RssWidgetConfigureActivity : Activity() {
             sampleButtonsContainer.addView(btn)
         }
 
-        restoreConfig()
         var maxItems = slider.value.toInt()
         var transparency = transparencySlider.value
         slider.addOnChangeListener { _, value, _ ->
@@ -81,18 +93,23 @@ class RssWidgetConfigureActivity : Activity() {
         }
 
         switchDescription.setOnCheckedChangeListener { _, isChecked ->
-            switchTrimDescription.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
-            sliderTrimDescription.visibility = if (isChecked && switchTrimDescription.isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            switchTrimDescription.visibility =
+                if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            sliderTrimDescription.visibility =
+                if (isChecked && switchTrimDescription.isChecked) android.view.View.VISIBLE else android.view.View.GONE
         }
 
-        var descriptionLength = if (switchTrimDescription.isChecked) sliderTrimDescription.value.toInt() else -1
+        var descriptionLength =
+            if (switchTrimDescription.isChecked) sliderTrimDescription.value.toInt() else -1
         switchTrimDescription.setOnCheckedChangeListener { _, isChecked ->
-            sliderTrimDescription.visibility = if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
+            sliderTrimDescription.visibility =
+                if (isChecked) android.view.View.VISIBLE else android.view.View.GONE
             if (!isChecked) {
                 descriptionLength = -1
                 switchTrimDescription.text = getString(R.string.trim_description)
             } else {
-                switchTrimDescription.text = getString(R.string.trim_description_length, sliderTrimDescription.value.toInt())
+                switchTrimDescription.text =
+                    getString(R.string.trim_description_length, sliderTrimDescription.value.toInt())
                 descriptionLength = sliderTrimDescription.value.toInt()
             }
         }
@@ -102,23 +119,60 @@ class RssWidgetConfigureActivity : Activity() {
             descriptionLength = value.toInt()
         }
 
+
+        val intervalOptions = listOf(
+            getString(R.string.update_15min),
+            getString(R.string.update_30min),
+            getString(R.string.update_1hr),
+            getString(R.string.update_3hr),
+            getString(R.string.update_6hr),
+            getString(R.string.update_12hr),
+            getString(R.string.update_manual),
+
+        )
+        val intervalAdapter =
+            android.widget.ArrayAdapter(this, android.R.layout.simple_spinner_item, intervalOptions)
+        intervalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        updateIntervalSpinner.adapter = intervalAdapter
+        updateIntervalSpinner.setSelection(1)
+        updateIntervalSpinner.onItemSelectedListener =
+            object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: android.widget.AdapterView<*>,
+                    view: android.view.View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val isManual = intervalValues[position] == 0
+                    // Optionally disable auto-update logic here
+                }
+
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
+            }
+
         addButton.setOnClickListener {
             val url = urlInput.text?.toString()?.trim() ?: ""
             val customTitle = titleEdit.text?.toString()?.trim()
             if (url.isNotEmpty()) {
-                val showDescription  = switchDescription.isChecked
+                val showDescription = switchDescription.isChecked
                 val showSource = switchSource.isChecked
-                val dateFormat = if (toggleButtonGroup.checkedButtonId == toggleButtonGroup.getChildAt(0).id) "relative" else "absolute"
+                val dateFormat =
+                    if (toggleButtonGroup.checkedButtonId == toggleButtonGroup.getChildAt(0).id) "relative" else "absolute"
+                val updateInterval = intervalValues[updateIntervalSpinner.selectedItemPosition]
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit {
                     putString(PREF_PREFIX_KEY + appWidgetId, url)
-                    .putString(PREF_PREFIX_KEY + "title_" + appWidgetId, customTitle)
-                    .putInt(PREF_PREFIX_KEY + "max_" + appWidgetId, maxItems)
-                    .putInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, descriptionLength)
-                    .putBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, showDescription)
-                    .putFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, transparency)
-                    .putBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, showSource)
-                    .putString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, dateFormat)
+                        .putString(PREF_PREFIX_KEY + "title_" + appWidgetId, customTitle)
+                        .putInt(PREF_PREFIX_KEY + "max_" + appWidgetId, maxItems)
+                        .putInt(
+                            PREF_PREFIX_KEY + "description_length_" + appWidgetId,
+                            descriptionLength
+                        )
+                        .putBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, showDescription)
+                        .putFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, transparency)
+                        .putBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, showSource)
+                        .putString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, dateFormat)
+                        .putInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, updateInterval)
                 }
 
                 val context = this@RssWidgetConfigureActivity
@@ -136,6 +190,7 @@ class RssWidgetConfigureActivity : Activity() {
                 urlInput.error = getString(R.string.rss_feed_url)
             }
         }
+        restoreConfig()
     }
 
     private fun restoreConfig() {
@@ -143,11 +198,17 @@ class RssWidgetConfigureActivity : Activity() {
         val savedUrl = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
         val savedTitle = prefs.getString(PREF_PREFIX_KEY + "title_" + appWidgetId, null)
         val savedMaxItems = prefs.getInt(PREF_PREFIX_KEY + "max_" + appWidgetId, 20)
-        val savedShowDescription = prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
-        val savedDescriptionLength = prefs.getInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, -1)
-        val savedTransparency = prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)
+        val savedShowDescription =
+            prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
+        val savedDescriptionLength =
+            prefs.getInt(PREF_PREFIX_KEY + "description_length_" + appWidgetId, -1)
+        val savedTransparency =
+            prefs.getFloat(PREF_PREFIX_KEY + "transparency_" + appWidgetId, 100f)
         val savedShowSource = prefs.getBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, false)
-        val savedDateFormat = prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative")
+        val savedDateFormat =
+            prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative")
+        val savedUpdateInterval =
+            prefs.getInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, 0)
 
         if (!savedUrl.isNullOrEmpty()) {
             urlInput.setText(savedUrl)
@@ -166,7 +227,8 @@ class RssWidgetConfigureActivity : Activity() {
             switchTrimDescription.isChecked = true
             sliderTrimDescription.visibility = android.view.View.VISIBLE
             sliderTrimDescription.value = savedDescriptionLength.toFloat()
-            switchTrimDescription.text = getString(R.string.trim_description_length, sliderTrimDescription.value.toInt())
+            switchTrimDescription.text =
+                getString(R.string.trim_description_length, sliderTrimDescription.value.toInt())
         }
 
         transparencySlider.value = savedTransparency
@@ -176,6 +238,9 @@ class RssWidgetConfigureActivity : Activity() {
         val relativeBtnId = toggleButtonGroup.getChildAt(0).id
         val absoluteBtnId = toggleButtonGroup.getChildAt(1).id
         toggleButtonGroup.check(if (savedDateFormat == "absolute") absoluteBtnId else relativeBtnId)
+
+        val intervalIdx = intervalValues.indexOf(savedUpdateInterval).takeIf { it >= 0 } ?: 0
+        updateIntervalSpinner.setSelection(intervalIdx)
     }
 
     companion object {
@@ -185,14 +250,17 @@ class RssWidgetConfigureActivity : Activity() {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
         }
+
         fun loadTitlePref(context: Context, appWidgetId: Int): String? {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             return prefs.getString(PREF_PREFIX_KEY + "title_" + appWidgetId, null)
         }
+
         fun loadMaxItemsPref(context: Context, appWidgetId: Int): Int {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             return prefs.getInt(PREF_PREFIX_KEY + "max_" + appWidgetId, 20)
         }
+
         fun loadDescriptionPref(context: Context, appWidgetId: Int): Boolean {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             return prefs.getBoolean(PREF_PREFIX_KEY + "description_" + appWidgetId, false)
@@ -212,9 +280,16 @@ class RssWidgetConfigureActivity : Activity() {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             return prefs.getBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, false)
         }
+
         fun loadDateFormatPref(context: Context, appWidgetId: Int): String {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-            return prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative") ?: "relative"
+            return prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative")
+                ?: "relative"
+        }
+
+        fun loadUpdateIntervalPref(context: Context, appWidgetId: Int): Int {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, 0)
         }
     }
 }
