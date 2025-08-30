@@ -9,6 +9,10 @@ import android.widget.RemoteViews
 import android.util.Log
 import androidx.core.net.toUri
 import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
+import androidx.work.WorkManager
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.ExistingPeriodicWorkPolicy
+import java.util.concurrent.TimeUnit
 
 class RssWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -85,6 +89,26 @@ class RssWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.btn_refresh, refreshPendingIntent)
             appWidgetManager.updateAppWidget(appWidgetId, views)
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widget_list)
+
+            enqueuePeriodicUpdate(context, appWidgetId)
+        }
+
+        private fun enqueuePeriodicUpdate(context: Context, appWidgetId: Int) {
+            val updateInterval = RssWidgetConfigureActivity.loadUpdateIntervalPref(context, appWidgetId)
+            if (updateInterval == 0) {
+                return
+            }
+
+            val workRequest = PeriodicWorkRequestBuilder<RssWidgetUpdateWorker>(updateInterval.toLong(), TimeUnit.MINUTES)
+                .addTag("rss_widget_update_$appWidgetId")
+                .setInputData(androidx.work.Data.Builder().putInt("appWidgetId", appWidgetId).build())
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "rss_widget_update_$appWidgetId",
+                ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+            )
         }
     }
 

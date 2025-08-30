@@ -210,7 +210,6 @@
                 </com.google.android.material.button.MaterialButtonToggleGroup>
             </LinearLayout>
 
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_add"
                 android:layout_width="match_parent"

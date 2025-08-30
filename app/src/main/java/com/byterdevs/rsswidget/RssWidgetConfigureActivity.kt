@@ -13,7 +13,9 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textview.MaterialTextView
 import androidx.core.content.edit
+import androidx.work.WorkManager
 import com.google.android.material.materialswitch.MaterialSwitch
+import java.util.concurrent.TimeUnit
 
 class RssWidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
@@ -45,7 +47,7 @@ class RssWidgetConfigureActivity : Activity() {
         Pair("NY Times", "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"),
         Pair("Guardian", "https://www.theguardian.com/world/rss"),
     )
-    private val intervalValues = listOf(0, 15, 30, 60, 180, 360, 720) // minutes, 0 = manual
+    private val intervalValues = listOf(0, 1, 30, 60, 180, 360, 720) // minutes, 0 = manual
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,13 +123,13 @@ class RssWidgetConfigureActivity : Activity() {
 
 
         val intervalOptions = listOf(
+            getString(R.string.update_manual),
             getString(R.string.update_15min),
             getString(R.string.update_30min),
             getString(R.string.update_1hr),
             getString(R.string.update_3hr),
             getString(R.string.update_6hr),
             getString(R.string.update_12hr),
-            getString(R.string.update_manual),
 
         )
         val intervalAdapter =
@@ -135,20 +137,6 @@ class RssWidgetConfigureActivity : Activity() {
         intervalAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         updateIntervalSpinner.adapter = intervalAdapter
         updateIntervalSpinner.setSelection(1)
-        updateIntervalSpinner.onItemSelectedListener =
-            object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: android.widget.AdapterView<*>,
-                    view: android.view.View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    val isManual = intervalValues[position] == 0
-                    // Optionally disable auto-update logic here
-                }
-
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>) {}
-            }
 
         addButton.setOnClickListener {
             val url = urlInput.text?.toString()?.trim() ?: ""

@@ -10,6 +10,7 @@ material = "1.10.0"
 materialVersion = "1.12.0"
 prettytime = "5.0.8.Final"
 rome = "2.1.0"
+workRuntimeKtx = "2.10.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -22,6 +23,7 @@ material-v1120 = { module = "com.google.android.material:material", version.ref 
 prettytime = { module = "org.ocpsoft.prettytime:prettytime", version.ref = "prettytime" }
 rome = { module = "com.rometools:rome", version.ref = "rome" }
 androidx-core = { group = "androidx.core", name = "core", version = "1.13.1" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
