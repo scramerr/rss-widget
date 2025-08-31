@@ -49,6 +49,7 @@ class RssWidgetProvider : AppWidgetProvider() {
             val transparency = RssWidgetConfigureActivity.loadTransparencyPref(context, appWidgetId)
             val showSource = RssWidgetConfigureActivity.loadShowSourcePref(context, appWidgetId)
             val dateFormat = RssWidgetConfigureActivity.loadDateFormatPref(context, appWidgetId)
+            val dimReadItems = RssWidgetConfigureActivity.loadDimReadItemsPref(context, appWidgetId)
 
             val views = setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss), R.id.widget_rss, transparency)
 
@@ -62,6 +63,7 @@ class RssWidgetProvider : AppWidgetProvider() {
             intent.putExtra("EXTRA_TRANSPARENCY", transparency)
             intent.putExtra("EXTRA_SHOW_SOURCE", showSource)
             intent.putExtra("EXTRA_DATE_FORMAT", dateFormat)
+            intent.putExtra("EXTRA_DIM_READ_ITEMS", dimReadItems)
             intent.data = intent.toUri(Intent.URI_INTENT_SCHEME).toUri()
             views.setRemoteAdapter(R.id.widget_list, intent)
             views.setEmptyView(R.id.widget_list, R.id.empty_text)

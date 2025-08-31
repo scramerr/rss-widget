@@ -27,6 +27,8 @@ class RssWidgetConfigureActivity : Activity() {
     private val slider: Slider get() = findViewById(R.id.slider_max_items)
     private val labelMaxItems: MaterialTextView get() = findViewById(R.id.label_max_items)
 
+    private val switchDimRead: MaterialSwitch get() = findViewById(R.id.dim_read)
+
     private val switchDescription: MaterialSwitch get() = findViewById(R.id.switch_description)
     private val switchTrimDescription: MaterialSwitch get() = findViewById(R.id.switch_trim_description)
     private val sliderTrimDescription: Slider get() = findViewById(R.id.slider_trim_description)
@@ -142,6 +144,7 @@ class RssWidgetConfigureActivity : Activity() {
             val url = urlInput.text?.toString()?.trim() ?: ""
             val customTitle = titleEdit.text?.toString()?.trim()
             if (url.isNotEmpty()) {
+                val dimRead = switchDimRead.isChecked
                 val showDescription = switchDescription.isChecked
                 val showSource = switchSource.isChecked
                 val dateFormat =
@@ -161,6 +164,7 @@ class RssWidgetConfigureActivity : Activity() {
                         .putBoolean(PREF_PREFIX_KEY + "source_" + appWidgetId, showSource)
                         .putString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, dateFormat)
                         .putInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, updateInterval)
+                        .putBoolean(PREF_PREFIX_KEY + "dim_read_" + appWidgetId, dimRead)
                 }
 
                 val context = this@RssWidgetConfigureActivity
@@ -197,6 +201,9 @@ class RssWidgetConfigureActivity : Activity() {
             prefs.getString(PREF_PREFIX_KEY + "date_format_" + appWidgetId, "relative")
         val savedUpdateInterval =
             prefs.getInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, 0)
+        val savedDimRead =
+            prefs.getBoolean(PREF_PREFIX_KEY + "dim_read_" + appWidgetId, true)
+
 
         if (!savedUrl.isNullOrEmpty()) {
             urlInput.setText(savedUrl)
@@ -207,6 +214,7 @@ class RssWidgetConfigureActivity : Activity() {
         slider.value = savedMaxItems.toFloat()
         labelMaxItems.text = getString(R.string.max_items_to_display, savedMaxItems)
         switchDescription.isChecked = savedShowDescription
+        switchDimRead.isChecked = savedDimRead
         if (switchDescription.isChecked) {
             switchTrimDescription.visibility = android.view.View.VISIBLE
         }
@@ -278,6 +286,10 @@ class RssWidgetConfigureActivity : Activity() {
         fun loadUpdateIntervalPref(context: Context, appWidgetId: Int): Int {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             return prefs.getInt(PREF_PREFIX_KEY + "update_interval_" + appWidgetId, 0)
+        }
+        fun loadDimReadItemsPref(context: Context, appWidgetId: Int): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(PREF_PREFIX_KEY + "dim_read_" + appWidgetId, true)
         }
     }
 }

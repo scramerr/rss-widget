@@ -51,6 +51,7 @@ class RssRemoteViewsFactory(
     private var error: Boolean = false
     private var showSource: Boolean = false
     private var dateFormat: String = "relative"
+    private var dimReadItems: Boolean = true
 
     companion object {
         private val refreshLock = Any()
@@ -62,6 +63,7 @@ class RssRemoteViewsFactory(
 
     fun setShowSource(show: Boolean) { showSource = show }
     fun setDateFormat(format: String) { dateFormat = format }
+    fun setDimReadItems(value: Boolean) { dimReadItems = value }
 
     fun getSourceFromUrl(url: String): String {
         return try {
@@ -220,7 +222,10 @@ class RssRemoteViewsFactory(
         } else {
             views.setViewVisibility(R.id.item_source, android.view.View.GONE)
         }
-        markItemRead(views, item)
+
+        if(dimReadItems) {
+            markItemRead(views, item)
+        }
 
         val fillInIntent = Intent()
         fillInIntent.data = item.link.toUri()
