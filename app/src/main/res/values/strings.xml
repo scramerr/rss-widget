@@ -10,7 +10,7 @@
     <string name="configure_rss_widget">Configure</string>
     <string name="trim_description">Trim description</string>
     <string name="trim_description_length">Trim description: %1$d characters</string>
-    <string name="widget_transparency_100">Widget background opacity: 100%</string>
+    <string name="widget_transparency">Widget background opacity: %1$d</string>
     <string name="max_items_to_display">Max items to display: %1$d</string>
     <string name="relative">Relative</string>
     <string name="absolute">Absolute</string>

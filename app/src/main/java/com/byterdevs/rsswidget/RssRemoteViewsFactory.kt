@@ -37,33 +37,17 @@ fun Context.getColorResCompat(@AttrRes id: Int): Int {
 
 class RssRemoteViewsFactory(
     private val context: Context,
-    private val rssUrl: String?,
-    private val maxItems: Int = 20,
-    private val showDescription: Boolean = false,
-    private val transparency: Float = 100f
+    private val appWidgetId: Int
 ) : RemoteViewsService.RemoteViewsFactory {
     private var items = mutableListOf<RssItem>()
-    private var customTitle: String? = null
-    private var trimDescription: Boolean = false
-    private var descriptionTrimLength: Int = 100
-    private var showTitle: Boolean = false
-    private var appWidgetId: Int = -1
+    private lateinit var prefs: WidgetPrefs
     private var error: Boolean = false
-    private var showSource: Boolean = false
-    private var dateFormat: String = "relative"
-    private var dimReadItems: Boolean = true
 
     companion object {
         private val refreshLock = Any()
         @Volatile private var isRefreshing = false
     }
-    override fun onCreate() {
-
-    }
-
-    fun setShowSource(show: Boolean) { showSource = show }
-    fun setDateFormat(format: String) { dateFormat = format }
-    fun setDimReadItems(value: Boolean) { dimReadItems = value }
+    override fun onCreate() {}
 
     fun getSourceFromUrl(url: String): String {
         return try {
@@ -84,7 +68,7 @@ class RssRemoteViewsFactory(
 
     fun formatDate(date: java.util.Date?): String {
         if (date == null) return ""
-        return if (dateFormat == "absolute") {
+        return if (prefs.dateFormat == "absolute") {
             formatAsTodayOrFullDate(date)
         } else {
             PrettyTime().format(date)
@@ -102,17 +86,17 @@ class RssRemoteViewsFactory(
         connection.connect()
 
         val feed = input.build(XmlReader(connection.inputStream))
-        for (entry in feed.entries.take(maxItems)) {
+        for (entry in feed.entries.take(prefs.maxItems)) {
             val title = entry.title ?: "No Title"
             val link = entry.link ?: ""
             val rawDescription = entry.description?.value ?: ""
             val plainDescription = HtmlCompat.fromHtml(rawDescription, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().replace("\n", " ").trim()
-            val description = if (trimDescription && plainDescription.length > descriptionTrimLength)
-                plainDescription.take(descriptionTrimLength) + "..."
+            val description = if (prefs.descriptionLength > 0 && plainDescription.length > prefs.descriptionLength)
+                plainDescription.take(prefs.descriptionLength) + "..."
                 else plainDescription
 
             val pubDate = formatDate(entry.publishedDate)
-            val source = if (showSource) getSourceFromUrl(link) else ""
+            val source = if (prefs.showSource) getSourceFromUrl(link) else ""
             items.add(RssItem(title, description, link, pubDate, source))
         }
         return items
@@ -136,6 +120,8 @@ class RssRemoteViewsFactory(
         }
 
         error = false
+        prefs = context.getWidgetPrefs(appWidgetId)
+        val rssUrl = prefs.url
 
         if(rssUrl == null) {
             error = true
@@ -159,8 +145,7 @@ class RssRemoteViewsFactory(
         items.clear()
 
         try {
-            val url = rssUrl
-            val loadedItems = loadRSS(url)
+            val loadedItems = loadRSS(rssUrl)
             items.addAll(loadedItems)
             Log.d("RssRemoteViewsFactory", "Data loaded successfully. Item count: ${items.size}")
         } catch (e: Exception) {
@@ -172,34 +157,19 @@ class RssRemoteViewsFactory(
             isRefreshing = false
         }
     }
-    
-    fun setHeader(title: String?) {
-        customTitle = title
-        showTitle = !title.isNullOrEmpty()
-    }
-
-    fun setDescriptionLength(length: Int) {
-        if (length > 0) {
-            trimDescription = true
-            descriptionTrimLength = length
-        }
-    }
-
-    fun setAppWidgetId(id: Int) { appWidgetId = id }
 
     override fun getCount(): Int {
+        val showTitle = !prefs.customTitle.isNullOrEmpty()
         return items.size + if (showTitle) 1 else 0
     }
 
-    override fun getViewTypeCount(): Int {
-        // We have a header and a list item, so two view types.
-        return 2
-    }
+    override fun getViewTypeCount(): Int = 2
 
     override fun getViewAt(position: Int): RemoteViews {
+        val showTitle = !prefs.customTitle.isNullOrEmpty()
         if (showTitle && position == 0) {
             val headerViews = RemoteViews(context.packageName, R.layout.widget_rss_header)
-            headerViews.setTextViewText(R.id.widget_title, customTitle)
+            headerViews.setTextViewText(R.id.widget_title, prefs.customTitle)
             return headerViews
         }
         val itemIndex = if (showTitle) position - 1 else position
@@ -209,21 +179,21 @@ class RssRemoteViewsFactory(
         val item = items[itemIndex]
         val views = RemoteViews(context.packageName, R.layout.widget_rss_item)
         views.setTextViewText(R.id.item_title, item.title)
-        if((showDescription || error) && item.description.isNotEmpty()) {
+        if((prefs.showDescription || error) && item.description.isNotEmpty()) {
             views.setViewVisibility(R.id.item_description, android.view.View.VISIBLE)
             views.setTextViewText(R.id.item_description, item.description)
         } else {
             views.setViewVisibility(R.id.item_description, android.view.View.GONE)
         }
         views.setTextViewText(R.id.item_date, item.pubDate)
-        if (showSource && item.source.isNotEmpty()) {
+        if (prefs.showSource && item.source.isNotEmpty()) {
             views.setViewVisibility(R.id.item_source, android.view.View.VISIBLE)
             views.setTextViewText(R.id.item_source, item.source)
         } else {
             views.setViewVisibility(R.id.item_source, android.view.View.GONE)
         }
 
-        if(dimReadItems) {
+        if(prefs.dimReadItems) {
             markItemRead(views, item)
         }
 
@@ -261,7 +231,7 @@ class RssRemoteViewsFactory(
     }
 
     override fun getLoadingView(): RemoteViews {
-        return setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss_loading), R.id.widget_rss_loading, transparency)
+        return setBgTransparency(context, RemoteViews(context.packageName, R.layout.widget_rss_loading), R.id.widget_rss_loading, prefs.transparency)
     }
 
     override fun getItemId(position: Int): Long = position.toLong()
