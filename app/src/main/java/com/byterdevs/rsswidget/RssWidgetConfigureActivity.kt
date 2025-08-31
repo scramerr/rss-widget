@@ -196,7 +196,7 @@ class RssWidgetConfigureActivity : Activity() {
         if (prefs.showDescription) {
             switchTrimDescription.visibility = View.VISIBLE
         }
-        if (prefs.descriptionLength > 0) {
+        if (prefs.showDescription && prefs.descriptionLength > 0) {
             switchTrimDescription.isChecked = true
             sliderTrimDescription.visibility = View.VISIBLE
             sliderTrimDescription.value = prefs.descriptionLength.toFloat()

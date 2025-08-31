@@ -40,7 +40,9 @@ class RssRemoteViewsFactory(
     private val appWidgetId: Int
 ) : RemoteViewsService.RemoteViewsFactory {
     private var items = mutableListOf<RssItem>()
-    private lateinit var prefs: WidgetPrefs
+    private val prefs: WidgetPrefs by lazy {
+        context.getWidgetPrefs(appWidgetId)
+    }
     private var error: Boolean = false
 
     companion object {
@@ -120,7 +122,6 @@ class RssRemoteViewsFactory(
         }
 
         error = false
-        prefs = context.getWidgetPrefs(appWidgetId)
         val rssUrl = prefs.url
 
         if(rssUrl == null) {
