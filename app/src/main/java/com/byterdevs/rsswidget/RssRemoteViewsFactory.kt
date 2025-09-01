@@ -14,19 +14,15 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.core.text.HtmlCompat
 import com.byterdevs.rsswidget.ThemeUtils.getThemedContextForWidget
 import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
-import com.rometools.rome.io.SyndFeedInput
-import com.rometools.rome.io.XmlReader
 import kotlinx.parcelize.Parcelize
 import org.ocpsoft.prettytime.PrettyTime
-import java.net.HttpURLConnection
-import java.net.URL
 import android.text.format.DateFormat
+import com.byterdevs.rsswidget.room.RssItemDao
 import java.util.Calendar
 import java.util.Date
-
+import kotlinx.coroutines.*
 
 @ColorInt
 fun Context.getColorResCompat(@AttrRes id: Int): Int {
@@ -52,15 +48,6 @@ class RssRemoteViewsFactory(
         prefs = context.getWidgetPrefs(appWidgetId)
     }
 
-    fun getSourceFromUrl(url: String): String {
-        return try {
-            val host = URL(url).host
-            if (host.startsWith("www.")) host.substring(4) else host
-        } catch (e: Exception) {
-            ""
-        }
-    }
-
     fun formatAsTodayOrFullDate(date: java.util.Date): String {
         return if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) == date.date) {
             "Today, " + DateFormat.format("h:mm a", date).toString()
@@ -78,30 +65,32 @@ class RssRemoteViewsFactory(
         }
     }
 
-    fun loadRSS(url: String): List<RssItem> {
-        val items = mutableListOf<RssItem>()
-        val feedUrl = URL(url)
-        val input = SyndFeedInput()
-        val connection = feedUrl.openConnection() as HttpURLConnection
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile; rv:48.0) Gecko/48.0 Firefox/48.0")
-        connection.connectTimeout = 10000 // 10 seconds
-        connection.readTimeout = 15000 // 15 seconds
-        connection.connect()
-
-        val feed = input.build(XmlReader(connection.inputStream))
-        for (entry in feed.entries.take(prefs.maxItems)) {
-            val title = entry.title ?: "No Title"
-            val link = entry.link ?: ""
-            val rawDescription = entry.description?.value ?: ""
-            val plainDescription = HtmlCompat.fromHtml(rawDescription, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().replace("\n", " ").trim()
-            val description = if (prefs.descriptionLength > 0 && plainDescription.length > prefs.descriptionLength)
-                plainDescription.take(prefs.descriptionLength) + "..."
-                else plainDescription
-
-            val source = if (prefs.showSource) getSourceFromUrl(link) else ""
-            items.add(RssItem(title, description, link, entry.publishedDate, source))
+    fun loadItems(dao: RssItemDao) = runBlocking {
+        val db = com.byterdevs.rsswidget.room.RssDatabase.getInstance(context)
+        val dao = db.rssItemDao()
+        try {
+            val entities = dao.getItemsForWidget(appWidgetId)
+            val loadedItems = entities.map {
+                RssItem(
+                    title = it.title,
+                    description = it.description,
+                    link = it.link,
+                    date = it.date?.let { d -> Date(d) },
+                    source = it.source
+                )
+            }
+            withContext(Dispatchers.Main) {
+                items.addAll(loadedItems)
+            }
+        } catch (e: Exception) {
+            Log.e("RssRemoteViewsFactory", "Failed to load items from DB", e)
+            withContext(Dispatchers.Main) {
+                error = true
+                items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", ""))
+            }
+        } finally {
+            isRefreshing = false
         }
-        return items
     }
 
     override fun onDataSetChanged() {
@@ -112,55 +101,20 @@ class RssRemoteViewsFactory(
             }
             isRefreshing = true
         }
-
-        // Check network availability
-        fun isNetworkAvailable(): Boolean {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val network = connectivityManager.activeNetwork ?: return false
-            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        }
-
         prefs = context.getWidgetPrefs(appWidgetId)
         error = false
-        val rssUrl = prefs.url
-
-        if(rssUrl == null) {
-            error = true
-            if (items.isEmpty()) {
-                items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", ""))
-            }
-            isRefreshing = false
-            return
-        }
-
-        if (!isNetworkAvailable()) {
-            error = true
-            Log.e("RssRemoteViewsFactory", "Network unavailable, not clearing items.")
-            if (items.isEmpty()) {
-                items.add(RssItem("No internet connection", "Connect to the internet and refresh.", ""))
-            }
-            isRefreshing = false
-            return
-        }
-
         items.clear()
 
-        try {
-            val loadedItems = loadRSS(rssUrl)
-            items.addAll(loadedItems)
-            Log.d("RssRemoteViewsFactory", "Data loaded successfully. Item count: ${items.size}")
-        } catch (e: Exception) {
-            Log.e("RssRemoteViewsFactory", "Failed to load RSS feed", e)
-            items.clear()
-            error = true
-            items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", ""))
-        } finally {
-            isRefreshing = false
-        }
+        val db = com.byterdevs.rsswidget.room.RssDatabase.getInstance(context)
+        val dao = db.rssItemDao()
+        loadItems(dao)
     }
 
     override fun getCount(): Int {
+        if (items.size == 0) {
+            return 0
+        }
+
         val showTitle = !prefs.customTitle.isNullOrEmpty()
         return items.size + if (showTitle) 1 else 0
     }
@@ -175,9 +129,6 @@ class RssRemoteViewsFactory(
             return headerViews
         }
         val itemIndex = if (showTitle) position - 1 else position
-        if (itemIndex >= items.size) {
-            return loadingView
-        }
         val item = items[itemIndex]
         val views = RemoteViews(context.packageName, R.layout.widget_rss_item)
         views.setTextViewText(R.id.item_title, item.title)
@@ -238,7 +189,9 @@ class RssRemoteViewsFactory(
 
     override fun getItemId(position: Int): Long = position.toLong()
     override fun hasStableIds(): Boolean = true
-    override fun onDestroy() { items.clear() }
+    override fun onDestroy() {
+        items.clear()
+    }
 
     @Parcelize
     data class RssItem(

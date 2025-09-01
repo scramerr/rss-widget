@@ -10,8 +10,10 @@ import android.util.Log
 import androidx.core.net.toUri
 import com.byterdevs.rsswidget.ThemeUtils.setBgTransparency
 import androidx.work.WorkManager
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
 import java.util.concurrent.TimeUnit
 
 class RssWidgetProvider : AppWidgetProvider() {
@@ -33,16 +35,13 @@ class RssWidgetProvider : AppWidgetProvider() {
             )
             Log.d("RssWidgetProvider", "appWidgetId: $appWidgetId")
             if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                val appWidgetManager = AppWidgetManager.getInstance(context)
-                val prefs = context.getWidgetPrefs(appWidgetId)
-                val views = setBgTransparency(
-                    context,
-                    RemoteViews(context.packageName, R.layout.widget_rss_loading),
-                    R.id.widget_rss_loading,
-                    prefs.transparency
-                )
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-                onUpdate(context, appWidgetManager, intArrayOf(appWidgetId))
+                val workRequest = OneTimeWorkRequestBuilder<RssWidgetUpdateWorker>()
+                    .addTag("rss_widget_manual_refresh_$appWidgetId")
+                    .setInputData(
+                        Data.Builder().putInt(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId).putBoolean("hardRefresh", true).build()
+                    )
+                    .build()
+                WorkManager.getInstance(context).enqueue(workRequest)
             }
         }
     }

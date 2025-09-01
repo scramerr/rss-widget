@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-parcelize")
+    id("com.google.devtools.ksp")
 }
 android {
     namespace = "com.byterdevs.rsswidget"
@@ -54,4 +55,6 @@ dependencies {
     implementation(libs.material.v1120)
     implementation(libs.androidx.core)
     implementation(libs.prettytime)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
 }

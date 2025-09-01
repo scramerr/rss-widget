@@ -1,0 +1,9 @@
+- Slightly reduced size of floating refresh button
+- Option to hide refresh button
+- Dropdown for widget refresh interval, including manual refresh
+- Option to disable dimming read articles
+- Widgetd data persistence, and fixes for some occasional network errors
+- Streamlined feed refresh mechanism
+- Removed max lines limit on article title
+- Improved visibility of article source text
+- Improved configuration page UI

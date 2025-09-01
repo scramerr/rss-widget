@@ -1,0 +1,3 @@
+- Customizable widget opacity
+- Option to show article sources
+- Option to show either relative or absolute timestamps
