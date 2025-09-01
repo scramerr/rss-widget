@@ -25,6 +25,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import android.text.format.DateFormat
 import java.util.Calendar
+import java.util.Date
 
 
 @ColorInt
@@ -40,16 +41,16 @@ class RssRemoteViewsFactory(
     private val appWidgetId: Int
 ) : RemoteViewsService.RemoteViewsFactory {
     private var items = mutableListOf<RssItem>()
-    private val prefs: WidgetPrefs by lazy {
-        context.getWidgetPrefs(appWidgetId)
-    }
+    private lateinit var prefs: WidgetPrefs
     private var error: Boolean = false
 
     companion object {
         private val refreshLock = Any()
         @Volatile private var isRefreshing = false
     }
-    override fun onCreate() {}
+    override fun onCreate() {
+        prefs = context.getWidgetPrefs(appWidgetId)
+    }
 
     fun getSourceFromUrl(url: String): String {
         return try {
@@ -97,9 +98,8 @@ class RssRemoteViewsFactory(
                 plainDescription.take(prefs.descriptionLength) + "..."
                 else plainDescription
 
-            val pubDate = formatDate(entry.publishedDate)
             val source = if (prefs.showSource) getSourceFromUrl(link) else ""
-            items.add(RssItem(title, description, link, pubDate, source))
+            items.add(RssItem(title, description, link, entry.publishedDate, source))
         }
         return items
     }
@@ -121,13 +121,14 @@ class RssRemoteViewsFactory(
             return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         }
 
+        prefs = context.getWidgetPrefs(appWidgetId)
         error = false
         val rssUrl = prefs.url
 
         if(rssUrl == null) {
             error = true
             if (items.isEmpty()) {
-                items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", "", ""))
+                items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", ""))
             }
             isRefreshing = false
             return
@@ -137,7 +138,7 @@ class RssRemoteViewsFactory(
             error = true
             Log.e("RssRemoteViewsFactory", "Network unavailable, not clearing items.")
             if (items.isEmpty()) {
-                items.add(RssItem("No internet connection", "Connect to the internet and refresh.", "", ""))
+                items.add(RssItem("No internet connection", "Connect to the internet and refresh.", ""))
             }
             isRefreshing = false
             return
@@ -153,7 +154,7 @@ class RssRemoteViewsFactory(
             Log.e("RssRemoteViewsFactory", "Failed to load RSS feed", e)
             items.clear()
             error = true
-            items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", "", ""))
+            items.add(RssItem("Failed to load RSS feed", "Verify the URL and add the widget again.", ""))
         } finally {
             isRefreshing = false
         }
@@ -186,7 +187,7 @@ class RssRemoteViewsFactory(
         } else {
             views.setViewVisibility(R.id.item_description, android.view.View.GONE)
         }
-        views.setTextViewText(R.id.item_date, item.pubDate)
+        views.setTextViewText(R.id.item_date, formatDate(item.date))
         if (prefs.showSource && item.source.isNotEmpty()) {
             views.setViewVisibility(R.id.item_source, android.view.View.VISIBLE)
             views.setTextViewText(R.id.item_source, item.source)
@@ -244,7 +245,7 @@ class RssRemoteViewsFactory(
         val title: String,
         val description: String,
         val link: String,
-        val pubDate: String,
+        val date: Date? = null,
         val source: String = ""
     ): Parcelable
 }
