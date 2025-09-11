@@ -1,5 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme using Material You dark colors. -->
     <style name="Theme.RSSWidget" parent="@style/Theme.Material3.DynamicColors.DayNight">
+        <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
     </style>
 </resources>

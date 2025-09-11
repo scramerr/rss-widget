@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
@@ -45,6 +46,7 @@ class RssWidgetConfigureActivity : Activity() {
             R.id.toggle_button_group
         )
     private val updateIntervalSpinner: Spinner get() = findViewById(R.id.spinner_update_interval)
+    private val openLinkSpinner: Spinner get() = findViewById(R.id.spinner_open_link_with)
     private val switchRefreshButton: MaterialSwitch get() = findViewById(R.id.show_refresh)
 
     private val urlSamples = listOf(
@@ -141,6 +143,16 @@ class RssWidgetConfigureActivity : Activity() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
+        val linkOpeningOptions = listOf(
+            getString(R.string.open_links_internal),
+            getString(R.string.open_links_reader),
+            getString(R.string.open_links_external),
+        )
+        val linkAdapter =
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, linkOpeningOptions)
+        linkAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        openLinkSpinner.adapter = linkAdapter
+
         addButton.setOnClickListener {
             val url = urlInput.text?.toString()?.trim() ?: ""
             val customTitle = titleEdit.text?.toString()?.trim()
@@ -163,7 +175,8 @@ class RssWidgetConfigureActivity : Activity() {
                 ) "relative" else "absolute",
                 updateInterval = intervalValues[updateIntervalSpinner.selectedItemPosition],
                 dimReadItems = switchDimRead.isChecked,
-                showRefreshButton = switchRefreshButton.isChecked
+                showRefreshButton = switchRefreshButton.isChecked,
+                readerType = ReaderType.entries[openLinkSpinner.selectedItemPosition]
             )
 
             applicationContext.setWidgetPrefs(appWidgetId, prefs)
@@ -212,7 +225,14 @@ class RssWidgetConfigureActivity : Activity() {
         val intervalIdx = intervalValues.indexOf(prefs.updateInterval)
         updateIntervalSpinner.setSelection(intervalIdx)
         switchRefreshButton.isChecked = prefs.showRefreshButton
+        openLinkSpinner.setSelection(prefs.readerType.ordinal)
     }
+}
+
+enum class ReaderType {
+    INTERNAL,
+    READER,
+    EXTERNAL
 }
 
 data class WidgetPrefs(
@@ -226,7 +246,8 @@ data class WidgetPrefs(
     val dateFormat: String,
     val updateInterval: Int,
     val dimReadItems: Boolean,
-    val showRefreshButton: Boolean
+    val showRefreshButton: Boolean,
+    val readerType: ReaderType
 )
 
 fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {
@@ -244,6 +265,7 @@ fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {
         updateInterval = prefs.getInt(widgetPrefKey(appWidgetId, "update_interval"), 30),
         dimReadItems = prefs.getBoolean(widgetPrefKey(appWidgetId, "dim_read"), true),
         showRefreshButton = prefs.getBoolean(widgetPrefKey(appWidgetId, "show_refresh"), true),
+        readerType = ReaderType.entries[prefs.getInt(widgetPrefKey(appWidgetId, "reader_type"), 0)]
     )
 }
 
@@ -261,6 +283,7 @@ fun Context.setWidgetPrefs(appWidgetId: Int, prefs: WidgetPrefs) {
         putInt(widgetPrefKey(appWidgetId, "update_interval"), prefs.updateInterval)
         putBoolean(widgetPrefKey(appWidgetId, "dim_read"), prefs.dimReadItems)
         putBoolean(widgetPrefKey(appWidgetId, "show_refresh"), prefs.showRefreshButton)
+        putInt(widgetPrefKey(appWidgetId, "reader_type"), prefs.readerType.ordinal)
     }
 }
 
