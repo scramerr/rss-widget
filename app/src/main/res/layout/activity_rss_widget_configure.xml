@@ -97,7 +97,7 @@
                 android:id="@+id/slider_transparency"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:stepSize="1"
+                android:stepSize="10.0"
                 android:value="100"
                 android:valueFrom="0"
                 android:valueTo="100" />

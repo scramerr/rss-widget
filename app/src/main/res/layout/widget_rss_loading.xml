@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="4dp"
-    android:background="@drawable/material_card_bg"
+    android:background="@drawable/background_1_0"
     android:gravity="center_vertical">
 
     <TextView
