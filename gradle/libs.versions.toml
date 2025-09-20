@@ -1,17 +1,16 @@
 [versions]
-agp = "8.11.1"
-kotlin = "2.0.21"
-coreKtx = "1.10.1"
+agp = "8.11.2"
+kotlin = "2.2.20"
+coreKtx = "1.17.0"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
-appcompat = "1.6.1"
-material = "1.10.0"
-materialVersion = "1.12.0"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+appcompat = "1.7.1"
+materialVersion = "1.13.0"
 prettytime = "5.0.8.Final"
 rome = "2.1.0"
-workRuntimeKtx = "2.10.3"
-room = "2.7.2"
+workRuntimeKtx = "2.10.4"
+room = "2.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -21,10 +20,10 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 material-v1120 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 prettytime = { module = "org.ocpsoft.prettytime:prettytime", version.ref = "prettytime" }
-rome = { module = "com.rometools:rome", version.ref = "rome" }
+rome-core = { module = "com.rometools:rome", version.ref = "rome" }
+rome-modules = { module = "com.rometools:rome-modules", version.ref = "rome" }
 androidx-core = { group = "androidx.core", name = "core", version = "1.13.1" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 

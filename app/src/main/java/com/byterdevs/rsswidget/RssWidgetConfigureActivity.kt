@@ -2,6 +2,7 @@ package com.byterdevs.rsswidget
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -35,6 +36,7 @@ class RssWidgetConfigureActivity : Activity() {
     private val switchDimRead: MaterialSwitch get() = findViewById(R.id.dim_read)
 
     private val switchDescription: MaterialSwitch get() = findViewById(R.id.switch_description)
+    private val switchImages: MaterialSwitch get() = findViewById(R.id.switch_images)
     private val switchTrimDescription: MaterialSwitch get() = findViewById(R.id.switch_trim_description)
     private val sliderTrimDescription: Slider get() = findViewById(R.id.slider_trim_description)
     private val transparencySlider: Slider get() = findViewById(R.id.slider_transparency)
@@ -166,6 +168,7 @@ class RssWidgetConfigureActivity : Activity() {
                 customTitle = customTitle,
                 maxItems = slider.value.toInt(),
                 showDescription = switchDescription.isChecked,
+                showImages = switchImages.isChecked,
                 descriptionLength = if (switchTrimDescription.isChecked) sliderTrimDescription.value.toInt() else -1,
                 transparency = transparencySlider.value,
                 showSource = switchSource.isChecked,
@@ -181,8 +184,12 @@ class RssWidgetConfigureActivity : Activity() {
 
             applicationContext.setWidgetPrefs(appWidgetId, prefs)
 
-            val appWidgetManager = AppWidgetManager.getInstance(this)
-            RssWidgetProvider.updateAppWidget(this, appWidgetManager, appWidgetId)
+
+            // Force refresh
+            val intent = Intent("com.byterdevs.rsswidget.ACTION_REFRESH")
+            intent.component = ComponentName(this, RssWidgetProvider::class.java)
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            sendBroadcast(intent)
 
             val resultValue = Intent().apply {
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -205,6 +212,7 @@ class RssWidgetConfigureActivity : Activity() {
         slider.value = prefs.maxItems.toFloat()
         labelMaxItems.text = getString(R.string.max_items_to_display, prefs.maxItems)
         switchDescription.isChecked = prefs.showDescription
+        switchImages.isChecked = prefs.showImages
         switchDimRead.isChecked = prefs.dimReadItems
         if (prefs.showDescription) {
             switchTrimDescription.visibility = View.VISIBLE
@@ -240,6 +248,7 @@ data class WidgetPrefs(
     val customTitle: String?,
     val maxItems: Int,
     val showDescription: Boolean,
+    val showImages: Boolean,
     val descriptionLength: Int,
     val transparency: Float,
     val showSource: Boolean,
@@ -257,13 +266,14 @@ fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {
         customTitle = prefs.getString(widgetPrefKey(appWidgetId, "title"), null),
         maxItems = prefs.getInt(widgetPrefKey(appWidgetId, "max"), 20),
         showDescription = prefs.getBoolean(widgetPrefKey(appWidgetId, "description"), false),
+        showImages = prefs.getBoolean(widgetPrefKey(appWidgetId, "images"), false),
         descriptionLength = prefs.getInt(widgetPrefKey(appWidgetId, "description_length"), -1),
         transparency = prefs.getFloat(widgetPrefKey(appWidgetId, "transparency"), 100f),
         showSource = prefs.getBoolean(widgetPrefKey(appWidgetId, "source"), false),
         dateFormat = prefs.getString(widgetPrefKey(appWidgetId, "date_format"), "relative")
             ?: "relative",
         updateInterval = prefs.getInt(widgetPrefKey(appWidgetId, "update_interval"), 30),
-        dimReadItems = prefs.getBoolean(widgetPrefKey(appWidgetId, "dim_read"), true),
+        dimReadItems = prefs.getBoolean(widgetPrefKey(appWidgetId, "dim_read"), false),
         showRefreshButton = prefs.getBoolean(widgetPrefKey(appWidgetId, "show_refresh"), true),
         readerType = ReaderType.entries[prefs.getInt(widgetPrefKey(appWidgetId, "reader_type"), 0)]
     )
@@ -277,6 +287,7 @@ fun Context.setWidgetPrefs(appWidgetId: Int, prefs: WidgetPrefs) {
         putInt(widgetPrefKey(appWidgetId, "max"), prefs.maxItems)
         putInt(widgetPrefKey(appWidgetId, "description_length"), prefs.descriptionLength)
         putBoolean(widgetPrefKey(appWidgetId, "description"), prefs.showDescription)
+        putBoolean(widgetPrefKey(appWidgetId, "images"), prefs.showImages)
         putFloat(widgetPrefKey(appWidgetId, "transparency"), prefs.transparency)
         putBoolean(widgetPrefKey(appWidgetId, "source"), prefs.showSource)
         putString(widgetPrefKey(appWidgetId, "date_format"), prefs.dateFormat)

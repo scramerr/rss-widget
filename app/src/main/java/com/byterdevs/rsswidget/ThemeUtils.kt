@@ -25,6 +25,7 @@ object ThemeUtils {
 
     fun getBackgroundResource(transparency: Float): Int {
         return when (transparency) {
+            in 0.0 .. 0.0 -> R.drawable.background_0_0
             in 0.0..0.1 -> R.drawable.background_0_1
             in 0.1..0.2 -> R.drawable.background_0_2
             in 0.2..0.3 -> R.drawable.background_0_3

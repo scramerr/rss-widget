@@ -1,6 +1,5 @@
 package com.byterdevs.rsswidget
 
-import android.R
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle

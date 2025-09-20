@@ -3,6 +3,7 @@ package com.byterdevs.rsswidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Parcelable
@@ -76,7 +77,8 @@ class RssRemoteViewsFactory(
                     description = it.description,
                     link = it.link,
                     date = it.date?.let { d -> Date(d) },
-                    source = it.source
+                    source = it.source,
+                    image = it.image
                 )
             }
             withContext(Dispatchers.Main) {
@@ -104,6 +106,7 @@ class RssRemoteViewsFactory(
         prefs = context.getWidgetPrefs(appWidgetId)
         error = false
         items.clear()
+        context.cacheDir.delete()
 
         val db = com.byterdevs.rsswidget.room.RssDatabase.getInstance(context)
         val dao = db.rssItemDao()
@@ -137,6 +140,19 @@ class RssRemoteViewsFactory(
             views.setTextViewText(R.id.item_description, item.description)
         } else {
             views.setViewVisibility(R.id.item_description, android.view.View.GONE)
+        }
+        // Show image if available
+        if (item.image != null && item.image.isNotEmpty()) {
+            val imageUri = item.image.toUri()
+            views.setViewVisibility(R.id.item_image, android.view.View.VISIBLE)
+            val launcherPackageName = context.packageManager.resolveActivity(
+                Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_HOME),
+                PackageManager.MATCH_DEFAULT_ONLY
+            )?.activityInfo?.packageName
+            context.grantUriPermission(launcherPackageName, imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            views.setImageViewUri(R.id.item_image, imageUri)
+        } else {
+            views.setViewVisibility(R.id.item_image, android.view.View.GONE)
         }
         views.setTextViewText(R.id.item_date, formatDate(item.date))
         if (prefs.showSource && item.source.isNotEmpty()) {
@@ -176,6 +192,7 @@ class RssRemoteViewsFactory(
             views.setTextColor(R.id.item_date, context.getColor(com.google.android.material.R.color.material_dynamic_neutral50))
             views.setTextColor(R.id.item_source, context.getColor(com.google.android.material.R.color.material_dynamic_neutral50))
         } else {
+
             views.setTextColor(R.id.item_title, colorTitle)
             views.setTextColor(R.id.item_description, colorDesc)
             views.setTextColor(R.id.item_date, colorSecondary)
@@ -191,6 +208,7 @@ class RssRemoteViewsFactory(
     override fun hasStableIds(): Boolean = true
     override fun onDestroy() {
         items.clear()
+        context.cacheDir.delete()
     }
 
     @Parcelize
@@ -199,6 +217,7 @@ class RssRemoteViewsFactory(
         val description: String,
         val link: String,
         val date: Date? = null,
-        val source: String = ""
+        val source: String = "",
+        val image: String? = null
     ): Parcelable
 }

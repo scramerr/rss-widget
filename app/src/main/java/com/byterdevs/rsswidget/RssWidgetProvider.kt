@@ -47,7 +47,6 @@ class RssWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        // Add this function to update the widget with the selected URL
         fun updateAppWidget(
             context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int
         ) {
@@ -65,6 +64,7 @@ class RssWidgetProvider : AppWidgetProvider() {
             )
 
             val intent = Intent(context, RssRemoteViewsService::class.java)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             intent.data = intent.toUri(Intent.URI_INTENT_SCHEME).toUri()
             views.setRemoteAdapter(R.id.widget_list, intent)
@@ -106,7 +106,7 @@ class RssWidgetProvider : AppWidgetProvider() {
             val workRequest = PeriodicWorkRequestBuilder<RssWidgetUpdateWorker>(
                 prefs.updateInterval.toLong(), TimeUnit.MINUTES
             ).addTag("rss_widget_update_$appWidgetId").setInputData(
-                androidx.work.Data.Builder().putInt("appWidgetId", appWidgetId).build()
+                Data.Builder().putInt("appWidgetId", appWidgetId).build()
             ).build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(

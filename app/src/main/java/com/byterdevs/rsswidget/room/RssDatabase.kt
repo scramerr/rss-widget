@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [RssItemEntity::class], version = 1)
+@Database(entities = [RssItemEntity::class], version = 2)
 abstract class RssDatabase : RoomDatabase() {
     abstract fun rssItemDao(): RssItemDao
 
@@ -19,7 +19,7 @@ abstract class RssDatabase : RoomDatabase() {
                     context.applicationContext,
                     RssDatabase::class.java,
                     "rss_widget_db"
-                ).build()
+                ).fallbackToDestructiveMigration(true).build()
                 INSTANCE = instance
                 instance
             }
