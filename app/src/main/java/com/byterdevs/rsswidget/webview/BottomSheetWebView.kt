@@ -22,6 +22,7 @@ class BottomSheetWebView(context: Context, activity: Activity, readerable: Boole
     private var mCurrentWebViewScrollY = 0
     private var mDragHandleActive = false
     private var mDismissed = false
+    private var readabilityDoneOnce = false
 
     init {
         inflateLayout(context)
@@ -95,6 +96,7 @@ class BottomSheetWebView(context: Context, activity: Activity, readerable: Boole
             webView.settings.domStorageEnabled = true
         }
 
+        readabilityDoneOnce = false
 
         webView.settings.isAlgorithmicDarkeningAllowed = true
         webView.webViewClient = object : WebViewClient() {
@@ -102,13 +104,14 @@ class BottomSheetWebView(context: Context, activity: Activity, readerable: Boole
                 super.onPageFinished(view, url)
 
                 webView.settings.javaScriptEnabled = true
-                if (readerable) {
+                if (readerable && !readabilityDoneOnce) {
                     val js = context.resources.openRawResource(R.raw.readability)
                         .bufferedReader().use { it.readText() }
                     view?.evaluateJavascript(js, null)
                 }
 
                 progressBar.visibility = GONE
+                readabilityDoneOnce = true
             }
         }
 
