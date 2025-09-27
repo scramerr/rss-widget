@@ -1,0 +1,3 @@
+- Open articles in a popup with reader mode
+- Images are now supported, prioritized by image quality
+- Fix issue where widget kept stuck on previous mode when switching between light/dark modes
