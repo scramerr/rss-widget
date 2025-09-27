@@ -28,7 +28,8 @@
 
 |                        |                        |                        |
 |------------------------|------------------------|------------------------|
-| ![](assets/config.png) | ![](assets/dark.png)   | ![](assets/light.png)  |
+| ![](fastlane/metadata/android/en-US/images/phoneScreenshots/config.png) | ![](fastlane/metadata/android/en-US/images/phoneScreenshots/dark.png) | ![](fastlane/metadata/android/en-US/images/phoneScreenshots/reader.png)
+| ![](fastlane/metadata/android/en-US/images/phoneScreenshots/light.png)  | ![](fastlane/metadata/android/en-US/images/phoneScreenshots/images.png) | ![](fastlane/metadata/android/en-US/images/phoneScreenshots/webview.png)
 
 ## Getting Started
 
