@@ -69,4 +69,4 @@ This project is licensed under the [Apache License 2.0](LICENSE).
 - [Rome](https://rometools.github.io/rome/)
 - [PrettyTime](https://www.ocpsoft.org/prettytime/)
 - AndroidX, Material Components
-- [Readability.js] https://github.com/mozilla/readability
+- [Readability.js](https://github.com/mozilla/readability)
