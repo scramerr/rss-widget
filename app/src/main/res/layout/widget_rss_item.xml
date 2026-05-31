@@ -15,8 +15,9 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:maxLines="2"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:textSize="17sp"
+        android:fontFamily="sans-serif-medium"
+        android:lineSpacingExtra="1dp" />
 
     <TextView
         android:id="@+id/item_description"
@@ -25,7 +26,8 @@
         android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="3"
-        android:textSize="13sp" />
+        android:textSize="12sp"
+        android:alpha="0.8" />
 
     <ImageView
         android:id="@+id/item_image"
@@ -38,6 +40,7 @@
         android:visibility="gone" />
 
     <LinearLayout
+        android:id="@+id/meta_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -51,7 +54,9 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="11sp"
-            android:textAllCaps="true" />
+            android:fontFamily="sans-serif-medium"
+            android:textAllCaps="true"
+            android:alpha="0.8" />
 
         <ImageView
             android:id="@+id/dot_divider"
@@ -61,12 +66,16 @@
             android:layout_marginRight="6dp"
             android:background="@android:color/darker_gray"
             android:visibility="gone"
-            android:contentDescription="@null" />
+            android:contentDescription="@null"
+            android:alpha="0.5" />
 
         <TextView
             android:id="@+id/item_date"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textSize="11sp" />
     </LinearLayout>
 </LinearLayout>

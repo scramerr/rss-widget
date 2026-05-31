@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Parcelable
 import android.util.Log
+import android.util.TypedValue
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import androidx.core.net.toUri
@@ -122,6 +123,21 @@ class RssRemoteViewsFactory(
 
         val views = RemoteViews(context.packageName, R.layout.widget_rss_item)
 
+        // RESPONSIVE SIZING
+        val isCompact = prefs.compactMode
+        val titleSize = if (isCompact) 14f else 17f
+        val descSize = if (isCompact) 11f else 12f
+        val metaSize = if (isCompact) 9f else 11f
+        val horizontalPadding = if (isCompact) 10 else 16
+        val verticalPadding = if (isCompact) 4 else 10
+
+        views.setTextViewTextSize(R.id.item_title, TypedValue.COMPLEX_UNIT_SP, titleSize)
+        views.setTextViewTextSize(R.id.item_description, TypedValue.COMPLEX_UNIT_SP, descSize)
+        views.setTextViewTextSize(R.id.item_source, TypedValue.COMPLEX_UNIT_SP, metaSize)
+        views.setTextViewTextSize(R.id.item_date, TypedValue.COMPLEX_UNIT_SP, metaSize)
+
+        views.setViewPadding(R.id.widget_rss_item, horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+
         // TEXT
         views.setTextViewText(R.id.item_title, item.title)
         views.setTextViewText(R.id.item_description, item.description)
@@ -147,30 +163,22 @@ class RssRemoteViewsFactory(
         // VISIBILITY
         views.setViewVisibility(
             R.id.item_description,
-            if (item.description.isNotEmpty() && prefs.showDescription)
+            if (prefs.showDescription && item.description.isNotEmpty())
                 android.view.View.VISIBLE
             else
                 android.view.View.GONE
         )
 
-        views.setViewVisibility(
-            R.id.item_source,
-            if (prefs.showSource && item.source.isNotEmpty())
-                android.view.View.VISIBLE
-            else
-                android.view.View.GONE
-        )
+        val showSource = prefs.showSource && item.source.isNotEmpty()
+        views.setViewVisibility(R.id.item_source, if (showSource) android.view.View.VISIBLE else android.view.View.GONE)
+        views.setViewVisibility(R.id.dot_divider, if (showSource) android.view.View.VISIBLE else android.view.View.GONE)
 
-        views.setViewVisibility(
-            R.id.dot_divider,
-            if (prefs.showSource && item.source.isNotEmpty())
-                android.view.View.VISIBLE
-            else
-                android.view.View.GONE
-        )
+        // Adjust metadata container spacing in compact mode
+        val metaTopPadding = if (isCompact) 4 else 8
+        views.setViewPadding(R.id.meta_container, 0, metaTopPadding, 0, 0)
 
         // IMAGE (safe handling)
-        if (!item.image.isNullOrEmpty()) {
+        if (prefs.showImages && !item.image.isNullOrEmpty()) {
             try {
                 val uri = Uri.parse(item.image)
                 views.setViewVisibility(R.id.item_image, android.view.View.VISIBLE)

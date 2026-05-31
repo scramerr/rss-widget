@@ -82,12 +82,39 @@ class RssWidgetProvider : AppWidgetProvider() {
                 prefs.themeMode
             )
 
+            // RESPONSIVE HEADER
+            if (prefs.compactMode) {
+                views.setViewPadding(R.id.control_bar, 12, 4, 8, 2)
+                views.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
+            } else {
+                views.setViewPadding(R.id.control_bar, 16, 8, 12, 4)
+                views.setTextViewTextSize(R.id.widget_title, android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
+            }
+
             // ----------------------------
             // STATIC UI
             // ----------------------------
-            val hasCustomTitle = !prefs.customTitle.isNullOrEmpty()
-            views.setTextViewText(R.id.widget_title, if (hasCustomTitle) prefs.customTitle else context.getString(R.string.app_label))
-            views.setTextColor(R.id.widget_title, colorForeground)
+            if (prefs.showHeaderBar) {
+                views.setViewVisibility(R.id.control_bar, View.VISIBLE)
+                views.setViewVisibility(R.id.header_divider, View.VISIBLE)
+
+                if (prefs.showTitle) {
+                    views.setViewVisibility(R.id.widget_title, View.VISIBLE)
+                    val title = if (prefs.customTitle.isNullOrEmpty()) {
+                        context.getString(R.string.app_label)
+                    } else {
+                        prefs.customTitle
+                    }
+                    views.setTextViewText(R.id.widget_title, title)
+                    views.setTextColor(R.id.widget_title, colorForeground)
+                } else {
+                    views.setViewVisibility(R.id.widget_title, View.GONE)
+                }
+            } else {
+                views.setViewVisibility(R.id.control_bar, View.GONE)
+                views.setViewVisibility(R.id.header_divider, View.GONE)
+            }
+
             views.setTextColor(R.id.empty_text, colorForeground)
             
             // Set divider color with alpha (subtle line)

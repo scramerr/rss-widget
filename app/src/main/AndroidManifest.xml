@@ -41,6 +41,7 @@
 
         <activity
             android:name=".RssWidgetConfigureActivity"
+            android:label=""
             android:exported="true">
 
             <intent-filter>
