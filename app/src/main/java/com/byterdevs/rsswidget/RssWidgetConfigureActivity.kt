@@ -27,6 +27,7 @@ const val PREF_PREFIX_KEY = "rss_url_"
 class RssWidgetConfigureActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private val urlInput: TextInputEditText get() = findViewById(R.id.edit_rss_url)
+    private val themeToggleGroup: MaterialButtonToggleGroup get() = findViewById(R.id.theme_toggle_group)
     private val addButton: MaterialButton get() = findViewById(R.id.button_add)
     private val titleEdit: TextInputEditText get() = findViewById(R.id.edit_widget_title)
 
@@ -163,6 +164,12 @@ class RssWidgetConfigureActivity : Activity() {
                 return@setOnClickListener
             }
 
+            val themeMode = when (themeToggleGroup.checkedButtonId) {
+                R.id.btn_theme_light -> ThemeMode.LIGHT
+                R.id.btn_theme_dark -> ThemeMode.DARK
+                else -> ThemeMode.SYSTEM
+            }
+
             val prefs = WidgetPrefs(
                 url = url,
                 customTitle = customTitle,
@@ -179,7 +186,8 @@ class RssWidgetConfigureActivity : Activity() {
                 updateInterval = intervalValues[updateIntervalSpinner.selectedItemPosition],
                 dimReadItems = switchDimRead.isChecked,
                 showRefreshButton = switchRefreshButton.isChecked,
-                readerType = ReaderType.entries[openLinkSpinner.selectedItemPosition]
+                readerType = ReaderType.entries[openLinkSpinner.selectedItemPosition],
+                themeMode = themeMode
             )
 
             applicationContext.setWidgetPrefs(appWidgetId, prefs)
@@ -234,6 +242,13 @@ class RssWidgetConfigureActivity : Activity() {
         updateIntervalSpinner.setSelection(intervalIdx)
         switchRefreshButton.isChecked = prefs.showRefreshButton
         openLinkSpinner.setSelection(prefs.readerType.ordinal)
+
+        val themeBtnId = when (prefs.themeMode) {
+            ThemeMode.LIGHT -> R.id.btn_theme_light
+            ThemeMode.DARK -> R.id.btn_theme_dark
+            ThemeMode.SYSTEM -> R.id.btn_theme_system
+        }
+        themeToggleGroup.check(themeBtnId)
     }
 }
 
@@ -256,7 +271,8 @@ data class WidgetPrefs(
     val updateInterval: Int,
     val dimReadItems: Boolean,
     val showRefreshButton: Boolean,
-    val readerType: ReaderType
+    val readerType: ReaderType,
+    val themeMode: ThemeMode
 )
 
 fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {
@@ -275,7 +291,8 @@ fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {
         updateInterval = prefs.getInt(widgetPrefKey(appWidgetId, "update_interval"), 30),
         dimReadItems = prefs.getBoolean(widgetPrefKey(appWidgetId, "dim_read"), false),
         showRefreshButton = prefs.getBoolean(widgetPrefKey(appWidgetId, "show_refresh"), true),
-        readerType = ReaderType.entries[prefs.getInt(widgetPrefKey(appWidgetId, "reader_type"), 0)]
+        readerType = ReaderType.entries[prefs.getInt(widgetPrefKey(appWidgetId, "reader_type"), 0)],
+        themeMode = ThemeMode.entries[prefs.getInt(widgetPrefKey(appWidgetId, "theme_mode"), 0)]
     )
 }
 
@@ -295,6 +312,7 @@ fun Context.setWidgetPrefs(appWidgetId: Int, prefs: WidgetPrefs) {
         putBoolean(widgetPrefKey(appWidgetId, "dim_read"), prefs.dimReadItems)
         putBoolean(widgetPrefKey(appWidgetId, "show_refresh"), prefs.showRefreshButton)
         putInt(widgetPrefKey(appWidgetId, "reader_type"), prefs.readerType.ordinal)
+        putInt(widgetPrefKey(appWidgetId, "theme_mode"), prefs.themeMode.ordinal)
     }
 }
 
