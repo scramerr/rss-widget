@@ -10,63 +10,54 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <!-- Control Bar -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp">
+            android:paddingLeft="16dp"
+            android:paddingRight="12dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="8dp">
 
             <TextView
                 android:id="@+id/widget_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@+id/button_container"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/button_container"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
                 android:text="@string/app_label"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/button_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
                 android:orientation="horizontal">
 
                 <ImageButton
                     android:id="@+id/btn_settings"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/header"
-                    android:padding="8dp"
+                    android:padding="6dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_settings" />
 
                 <ImageButton
-                    android:id="@+id/btn_theme_toggle"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="@android:color/transparent"
-                    android:contentDescription="@string/theme"
-                    android:padding="8dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_theme" />
-
-                <ImageButton
                     android:id="@+id/btn_refresh"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginLeft="8dp"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/refresh"
-                    android:padding="8dp"
+                    android:padding="6dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_refresh" />
             </LinearLayout>
@@ -76,30 +67,30 @@
             android:id="@+id/header_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:background="@android:color/darker_gray"
             android:contentDescription="@null" />
 
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp">
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/empty_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Loading..."
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:text="@string/loading"
+                android:textSize="16sp" />
 
             <ListView
                 android:id="@+id/widget_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:divider="@android:color/transparent"
-                android:dividerHeight="0dp" />
+                android:dividerHeight="0dp"
+                android:paddingTop="4dp" />
         </FrameLayout>
     </LinearLayout>
 </FrameLayout>

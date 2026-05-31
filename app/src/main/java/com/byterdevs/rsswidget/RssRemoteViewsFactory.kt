@@ -130,7 +130,7 @@ class RssRemoteViewsFactory(
 
         // COLORS (single source of truth)
         if (prefs.dimReadItems && ReadItemsStore.isRead(context, appWidgetId, item.link)) {
-            val dimColor = if (prefs.themeMode == ThemeMode.DARK) 0xFF888888.toInt() else 0xFF999999.toInt()
+            val dimColor = (foreground and 0x00FFFFFF) or 0x66000000 // ~40% alpha
             views.setTextColor(R.id.item_title, dimColor)
             views.setTextColor(R.id.item_description, dimColor)
             views.setTextColor(R.id.item_date, dimColor)

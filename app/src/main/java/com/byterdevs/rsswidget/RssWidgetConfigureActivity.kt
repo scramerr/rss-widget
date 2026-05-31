@@ -187,7 +187,9 @@ class RssWidgetConfigureActivity : Activity() {
                 dimReadItems = switchDimRead.isChecked,
                 showRefreshButton = switchRefreshButton.isChecked,
                 readerType = ReaderType.entries[openLinkSpinner.selectedItemPosition],
-                themeMode = themeMode
+                themeMode = themeMode,
+
+
             )
 
             applicationContext.setWidgetPrefs(appWidgetId, prefs)
@@ -272,7 +274,12 @@ data class WidgetPrefs(
     val dimReadItems: Boolean,
     val showRefreshButton: Boolean,
     val readerType: ReaderType,
-    val themeMode: ThemeMode
+    val themeMode: ThemeMode,
+    val titleColor: Int = 0,
+    val descriptionColor: Int = 0,
+    val compactMode: Boolean = false,
+    val tapToRefresh: Boolean = false
+
 )
 
 fun Context.getWidgetPrefs(appWidgetId: Int): WidgetPrefs {

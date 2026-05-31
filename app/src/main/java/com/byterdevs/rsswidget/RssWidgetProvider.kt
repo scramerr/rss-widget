@@ -1,5 +1,6 @@
 package com.byterdevs.rsswidget
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -53,26 +54,12 @@ class RssWidgetProvider : AppWidgetProvider() {
 
                 WorkManager.getInstance(context).enqueue(workRequest)
             }
-        } else if (intent.action == "com.byterdevs.rsswidget.ACTION_THEME_TOGGLE") {
-            val appWidgetId = intent.getIntExtra(
-                AppWidgetManager.EXTRA_APPWIDGET_ID,
-                AppWidgetManager.INVALID_APPWIDGET_ID
-            )
-            if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                val prefs = context.getWidgetPrefs(appWidgetId)
-                val newTheme = when (prefs.themeMode) {
-                    ThemeMode.SYSTEM -> ThemeMode.LIGHT
-                    ThemeMode.LIGHT -> ThemeMode.DARK
-                    ThemeMode.DARK -> ThemeMode.SYSTEM
-                }
-                context.setWidgetPrefs(appWidgetId, prefs.copy(themeMode = newTheme))
-                updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId)
-            }
         }
     }
 
     companion object {
 
+        @SuppressLint("RemoteViewLayout")
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -103,13 +90,17 @@ class RssWidgetProvider : AppWidgetProvider() {
             views.setTextColor(R.id.widget_title, colorForeground)
             views.setTextColor(R.id.empty_text, colorForeground)
             
-            // Set divider color with alpha
-            val dividerColor = (colorForeground and 0x00FFFFFF) or 0x33000000 // ~20% alpha
+            // Set divider color with alpha (subtle line)
+            val dividerColor = (colorForeground and 0x00FFFFFF) or 0x26000000 // ~15% alpha
             views.setInt(R.id.header_divider, "setBackgroundColor", dividerColor)
 
+            // Buttons with subtle transparency
             views.setInt(R.id.btn_refresh, "setColorFilter", colorForeground)
-            views.setInt(R.id.btn_theme_toggle, "setColorFilter", colorForeground)
             views.setInt(R.id.btn_settings, "setColorFilter", colorForeground)
+            
+            // Apply alpha programmatically for maximum stability
+            views.setInt(R.id.btn_refresh, "setAlpha", 180)
+            views.setInt(R.id.btn_settings, "setAlpha", 180)
 
             views.setViewVisibility(
                 R.id.btn_refresh,
@@ -159,21 +150,6 @@ class RssWidgetProvider : AppWidgetProvider() {
             )
 
             views.setOnClickPendingIntent(R.id.btn_refresh, refreshPendingIntent)
-
-            // ----------------------------
-            // THEME TOGGLE
-            // ----------------------------
-            val themeIntent = Intent(context, RssWidgetProvider::class.java).apply {
-                action = "com.byterdevs.rsswidget.ACTION_THEME_TOGGLE"
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            }
-            val themePendingIntent = PendingIntent.getBroadcast(
-                context,
-                appWidgetId + 10000, // Unique requestCode
-                themeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.btn_theme_toggle, themePendingIntent)
 
             // ----------------------------
             // SETTINGS BUTTON
